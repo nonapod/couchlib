@@ -40,7 +40,7 @@ module.exports = function couchlib(options) {
 		var request;
 	
 		/* If we get an alternate host, port or set or auth, use is, otherwise use our
-     * instance settings */
+     		 * instance settings */
 		if(!("host" in options) && this.host) options.host = this.host;
 		if(!("port" in options) && this.port) options.port = this.port;
 		if(!("auth" in options) && this.user && this.password) options.auth = (this.user + ":" + this.password);
@@ -83,7 +83,6 @@ module.exports = function couchlib(options) {
 			console.log({"Error": error}); 
 		}
 
-		console.log(options);
 		/* Go ahead and run our request */
 		request = http.request(options, onRequest);
 		/* If we have post data, write it to the request it */
