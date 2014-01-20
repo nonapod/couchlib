@@ -3,7 +3,7 @@ couchlib
 
 A couchdb interface for nodejs using the http module.
 
-Please note this is by no means a finished library, only a means for me to track this while I build my new site, with a customised couchdb connector, so this will be updated frequently while I tweak things.
+**Please note this is by no means a finished library, only a means for me to track this while I build my new site, with a customised couchdb connector, so this will be updated frequently while I tweak things.**
 
 To get a basic usage out of this in its current state, you can try the following:
 
