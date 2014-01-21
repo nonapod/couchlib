@@ -39,8 +39,7 @@ module.exports = function couchlib(options) {
 		var querystring = require('querystring');
 		var request;
 	
-		/* If we get an alternate host, port or set or auth, use is, otherwise use our
-     * instance settings */
+		/* If we get an alternate host, port or set or auth, use is, otherwise use our instance settings */
 		if(!("host" in options) && this.host) options.host = this.host;
 		if(!("port" in options) && this.port) options.port = this.port;
 		if(!("auth" in options) && this.user && this.password) options.auth = (this.user + ":" + this.password);
