@@ -40,7 +40,7 @@ module.exports = function couchlib(options) {
 		var request;
 	
 		/* If we get an alternate host, port or set or auth, use is, otherwise use our
-     		 * instance settings */
+     * instance settings */
 		if(!("host" in options) && this.host) options.host = this.host;
 		if(!("port" in options) && this.port) options.port = this.port;
 		if(!("auth" in options) && this.user && this.password) options.auth = (this.user + ":" + this.password);
@@ -90,6 +90,39 @@ module.exports = function couchlib(options) {
 		request.on(ERROR, onError);
 		request.end();	
 	}; // End run
+
+	/* These need to be extended eventually, but they'll work now for basic functionality */
+
+	/* Run a get request, take a path and a callback */
+	this.get = function(path, callback) {
+		this.run({"method": "GET", "path": path}, callback);
+	}; // End get
+
+	/* Run a put request, take a path, data and a callback */
+	this.put = function(path, data, callback) {
+		this.run({"path": path, "data": data, "method": "PUT"}, callback);
+	}; // End put
+
+	/* Run a delete request, take a path, data and a callback */
+	this.delete = function(path, data, callback) {
+		/* Enable the deleted flag if it's not set */
+		data._deleted = true;
+		this.run({"path": path, "data": data, "method": "DELETE"}, callback);
+	}; // End put
+
+	/* Create a database, take a database name and a callback */
+	this.create = function(dbname, callback) {
+		/* Strip any forward slashes and then add one at the beginning*/
+		dbname = "/" + dbname.replace(/\//g, "");
+		this.run({"path": dbname, "method" :"PUT"}, callback);
+	}; // End create
+
+	/* Destroy a database, take a database name and a callback */
+	this.destroy = function(dbname, callback) {
+		/* Strip any forward slashes and then add one at the beginning*/
+		dbname = "/" + dbname.replace(/\//g, "");
+		this.run({"path": dbname, "method" :"DELETE"}, callback);
+	}; // End create
 
 }; // End couchlib
 
