@@ -3,7 +3,7 @@ couchlib
 
 A couchdb interface for nodejs using the http module.
 
-**Please note this is by no means a finished library, only a means for me to track this while I build my new site, with a customised couchdb connector, so this will be updated frequently while I tweak things.**
+**Please note this library is in a very early phase of development, 2 days from me writing this to be precise! I decided to code my own couchdb connector to use in my future projects, including a new personal app I'm writing at the moment. Please don't expect to much of this just yet.**
 
 To get a basic usage out of this in its current state, you can try the following:
 
@@ -40,6 +40,28 @@ To get a basic usage out of this in its current state, you can try the following
     couchlib.run({"method": "GET", "path": "/_users/org.couchdb.user:testuser"}, callback);
     ```
 
-That's all the library really does at the moment, it doesn't handle secure authentication just yet, no many other useful features. I'll be developing this as I build my new site, and I'll be maintaining it in the future as I'd like to use this for future personal projects. 
+4. To make things easier there are a few helper functions:
+    * To create a database:
+    ```
+    couchlib.create("database name", callback);
+    ```
+    * To delete a database:
+    ```
+    couchlib.destroy("database name", callback);
+    ```
+    * To run a put request:
+    ```
+    var data = { /*Put some data here*/ };
+    couchlib.put("/path/goes/here", data, callback);
+    ```
+    * To run a get request:
+    ```
+    couchlib.get("/path/goes/here", callback);
+    ```
+    * To run a delete request (This automatically adds the _deleted flag):
+    ```
+    var data = { /*Put some data here*/ };
+    couchlib.delete("/path/goes/here", data, callback);
+    ```
 
-
+And that's all at the moment, I'll be changing things considerably the more I go along.
