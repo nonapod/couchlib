@@ -14,7 +14,11 @@ module.exports = function couchlib(options) {
 
 	/* Initialise couchlib */
 	if("host" in options) this.host = options.host;		
+	/* Default host to localhost*/
+	else this.host = "127.0.0.1";
 	if("port" in options) this.port = options.port;		
+	/* Default port to 5984 */
+	else this.port = "5984";
 	if("user" in options) this.user = options.user;		
 	if("password" in options) this.password = options.password;		
 
@@ -50,18 +54,18 @@ module.exports = function couchlib(options) {
 			/* If there's no headers, set some default ones */
 			if(!("headers" in options)) {
 				options.headers = {"Accept": "Application/json", "Content-Type": "Application/json"};
-			}			
+			}
 			else { 
-				/* If we do have headers, but accept isn't in them, set it to JSON */
+				/* If we do have headers, but accept isn't in them, default it to JSON */
 				if(!("Accept" in options.headers)) {
 					options.headers.Accept = "Application/json";
 				}
-				/* If we do have headers, but content-type isn't in them, set it to JSON */
+				/* If we do have headers, but content-type isn't in them, default it to JSON */
 				if(!("Content-Type" in options.headers)) {
 					options.headers.Accept = "Application/json";
-				}	
-			}
-		}
+				}
+			} // End else
+		} // End if data in options
 
 		/* Callback for our request */
 		function onRequest(res) { 
@@ -79,6 +83,7 @@ module.exports = function couchlib(options) {
 
 		/* Callback for error handling */
 		function onError(error) { 
+			/* Just console log for now */
 			console.log({"Error": error}); 
 		}
 
@@ -93,13 +98,27 @@ module.exports = function couchlib(options) {
 	/* These need to be extended eventually, but they'll work now for basic functionality */
 
 	/* Run a get request, take a path and a callback */
+	/* If there are 3 arguments, the 2nd argument becomes data */
 	this.get = function(path, callback) {
-		this.run({"method": "GET", "path": path}, callback);
+		var data = {};
+		if(arguments.length == 3 ) {
+			data = arguments[1];
+			callback = arguments[2];
+		}
+		path = "/" + path.replace(/\//g, "");
+		this.run({"method": "GET", "data" : data, "path": path}, callback);
 	}; // End get
 
 	/* Run a put request, take a path, data and a callback */
 	this.put = function(path, data, callback) {
+		path = "/" + path.replace(/\//g, "");
 		this.run({"path": path, "data": data, "method": "PUT"}, callback);
+	}; // End put
+
+	/* Run a post request, take a path, data and a callback */
+	this.post = function(path, data, callback) {
+		path = "/" + path.replace(/\//g, "");
+		this.run({"path": path, "data": data, "method": "POST"}, callback);
 	}; // End put
 
 	/* Run a delete request, take a path, data and a callback */
@@ -122,6 +141,39 @@ module.exports = function couchlib(options) {
 		dbname = "/" + dbname.replace(/\//g, "");
 		this.run({"path": dbname, "method" :"DELETE"}, callback);
 	}; // End create
+
+	/* Get the couchdb version, take in a callback */
+	this.version = function(callback) {
+		this.get("/", function(response){
+			/* If we get a version number pass it to the callback */
+			var error = "Unable To Get Version";
+			response = JSON.parse(response);
+			if("version" in response) {
+				if(callback) callback(response.version);
+				else console.log(response.version); 
+			}
+			else {
+				if(callback) callback(error);
+				else console.log(error); 
+			}
+		}); // End get
+	}; // End version
+
+	/* Show databases, take in a callback */
+	this.databases = function(callback) {
+		if(callback) this.get("_all_dbs", callback);
+		else this.get("_all_dbs", function(response){
+			console.log(response);
+		});
+	}; // End databases
+
+	/* Get uuids, take in a count and a callback */
+	this.uuid = function(count, callback) {
+		if(callback) this.get("_uuids?count=" + count, callback);
+		else this.get("_uuids?count=" + count, function(response){
+			console.log(response);
+		});
+	}; // End uuid 
 
 }; // End couchlib
 
