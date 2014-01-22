@@ -8,11 +8,11 @@ A couchdb interface for nodejs using the http module.
 To get a basic usage out of this in its current state, you can try the following:
 
 1. Import the library
-    ```
+    ```javascript
     var couchlib = require('./couchlib.js');
     ```
 2. Grab a new instance and pass in information:
-    ```
+    ```javascript
     couchlib = new couchlib({
       "host": "localhost", 
       "port": "5984", 
@@ -21,7 +21,7 @@ To get a basic usage out of this in its current state, you can try the following
     ```
 
 3. Now go ahead and make some requests:
-    ```
+    ```javascript
     /* Set up a callback */
     var callback = function(response) {
       console.log(response);
@@ -42,42 +42,42 @@ To get a basic usage out of this in its current state, you can try the following
 
 4. To make things easier there are a few helper functions:
     * To create a database:
-    ```
+    ```javascript
     couchlib.create("database name", callback);
     ```
     * To delete a database:
-    ```
+    ```javascript
     couchlib.destroy("database name", callback);
     ```
     * To run a put request:
-    ```
+    ```javascript
     var data = { /*Put some data here*/ };
     couchlib.put("path/goes/here", data, callback);
     ```
     * To run a get request:
-    ```
+    ```javascript
     /*Without data*/
     couchlib.get("path/goes/here", callback);
     /*With data*/
     couchlib.git("path/goes/here", {"data": "goes here", callback});
     ```
     * To run a delete request (This automatically adds the _deleted flag):
-    ```
+    ```javascript
     var data = { /*Put some data here*/ };
     couchlib.delete("path/goes/here", data, callback);
     ```
     * To get the CouchDB version:
-    ```
+    ```javascript
     /*If no callback is provided, the version will be logged to the console*/
     couchlib.version(callback);
     ```
     * To show a list of databases:
-    ```
+    ```javascript
     /*If no callback is provided, the database list will be logged to the console*/
     couchlib.databases(callback);
     ```
     * To get some uuids:
-    ```
+    ```javascript
     /*Pass in a count of 1 or more and an optional callback, no callback will log the uuids to the console*/
     couchlib.uuids(count, callback);
     ```
