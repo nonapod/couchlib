@@ -45,15 +45,18 @@ To get a basic usage out of this in its current state, you can try the following
     ```javascript
     couchlib.create("database name", callback);
     ```
+
     * To delete a database:
     ```javascript
     couchlib.destroy("database name", callback);
     ```
+    
     * To run a put request:
     ```javascript
     var data = { /*Put some data here*/ };
     couchlib.put("path/goes/here", data, callback);
     ```
+    
     * To run a get request:
     ```javascript
     /*Without data*/
@@ -61,21 +64,25 @@ To get a basic usage out of this in its current state, you can try the following
     /*With data*/
     couchlib.git("path/goes/here", {"data": "goes here", callback});
     ```
+    
     * To run a delete request (This automatically adds the _deleted flag):
     ```javascript
     var data = { /*Put some data here*/ };
     couchlib.delete("path/goes/here", data, callback);
     ```
+    
     * To get the CouchDB version:
     ```javascript
     /*If no callback is provided, the version will be logged to the console*/
     couchlib.version(callback);
     ```
+    
     * To show a list of databases:
     ```javascript
     /*If no callback is provided, the database list will be logged to the console*/
     couchlib.databases(callback);
     ```
+    
     * To get some uuids:
     ```javascript
     /*Pass in a count of 1 or more and an optional callback, no callback will log the uuids to the console*/
