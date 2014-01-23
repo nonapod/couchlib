@@ -41,28 +41,37 @@ module.exports = function couchlib(options) {
 		var ERROR = "error";
 		var http = require('http');
 		var querystring = require('querystring');
+		var dataquery;
 		var request;
 	
 		/* If we get an alternate host, port or set or auth, use is, otherwise use our instance settings */
 		if(!("host" in options) && this.host) options.host = this.host;
 		if(!("port" in options) && this.port) options.port = this.port;
 		if(!("auth" in options) && this.user && this.password) options.auth = (this.user + ":" + this.password);
+		if(!("path" in options)) options.path = "/";
+		if(options.path.charAt(0) != "/") options.path = "/" + options.path;
 
 		/* If we have any data, JSON stringify it */
 		if("data" in options) { 
-			options.data = JSON.stringify(options.data);
+			/* Get methods use a query string rather than passing data */
+			if(options.method == "GET") {
+				dataquery = querystring.stringify(options.data);
+				/* If we get a valid data querystring, append it to the path along with a ? */
+				if(dataquery.length) options.path = options.path + "?" + querystring.stringify(options.data);
+			}
+			console.log(options.path);
 			/* If there's no headers, set some default ones */
 			if(!("headers" in options)) {
-				options.headers = {"Accept": "Application/json", "Content-Type": "Application/json"};
+				options.headers = {"Accept": "application/json", "Content-Type": "application/json"};
 			}
 			else { 
 				/* If we do have headers, but accept isn't in them, default it to JSON */
 				if(!("Accept" in options.headers)) {
-					options.headers.Accept = "Application/json";
+					options.headers.Accept = "application/json";
 				}
 				/* If we do have headers, but content-type isn't in them, default it to JSON */
 				if(!("Content-Type" in options.headers)) {
-					options.headers.Accept = "Application/json";
+					options.headers.Accept = "application/json";
 				}
 			} // End else
 		} // End if data in options
@@ -77,20 +86,25 @@ module.exports = function couchlib(options) {
 
 			/* As soon as we get the end signal, pass our result to the callback */
 			res.on(END, function returnResult(segment) {
-				callback(result);
+				if(callback) callback(result);
+				else console.log(result);
 			}); // End returnResult
 		} // End callback
 
-		/* Callback for error handling */
+		/* Callback for error handling; pass it to a callback or log it to the console */
 		function onError(error) { 
-			/* Just console log for now */
-			console.log({"Error": error}); 
+			error = {"Error": error};
+			if(callback) callback(error);
+			else console.log(error);
 		}
 
+		/* Stringify the data */
+		options.data = JSON.stringify(options.data);
+		console.log(options);
 		/* Go ahead and run our request */
 		request = http.request(options, onRequest);
-		/* If we have post data, write it to the request it */
-		if(options.data) request.write(options.data);
+		/* If we have data, and we're not running a get request, write it to the request it */
+		if(options.method != "GET" && options.data) request.write(options.data);
 		request.on(ERROR, onError);
 		request.end();	
 	}; // End run
@@ -105,19 +119,16 @@ module.exports = function couchlib(options) {
 			data = arguments[1];
 			callback = arguments[2];
 		}
-		path = "/" + path.replace(/\//g, "");
 		this.run({"method": "GET", "data" : data, "path": path}, callback);
 	}; // End get
 
 	/* Run a put request, take a path, data and a callback */
 	this.put = function(path, data, callback) {
-		path = "/" + path.replace(/\//g, "");
 		this.run({"path": path, "data": data, "method": "PUT"}, callback);
 	}; // End put
 
 	/* Run a post request, take a path, data and a callback */
 	this.post = function(path, data, callback) {
-		path = "/" + path.replace(/\//g, "");
 		this.run({"path": path, "data": data, "method": "POST"}, callback);
 	}; // End put
 
@@ -131,14 +142,12 @@ module.exports = function couchlib(options) {
 	/* Create a database, take a database name and a callback */
 	this.create = function(dbname, callback) {
 		/* Strip any forward slashes and then add one at the beginning*/
-		dbname = "/" + dbname.replace(/\//g, "");
 		this.run({"path": dbname, "method" :"PUT"}, callback);
 	}; // End create
 
 	/* Destroy a database, take a database name and a callback */
 	this.destroy = function(dbname, callback) {
 		/* Strip any forward slashes and then add one at the beginning*/
-		dbname = "/" + dbname.replace(/\//g, "");
 		this.run({"path": dbname, "method" :"DELETE"}, callback);
 	}; // End create
 
@@ -146,7 +155,7 @@ module.exports = function couchlib(options) {
 	this.version = function(callback) {
 		this.get("/", function(response){
 			/* If we get a version number pass it to the callback */
-			var error = "Unable To Get Version";
+			var error = {"Error": "Unable To Get Version"};
 			response = JSON.parse(response);
 			if("version" in response) {
 				if(callback) callback(response.version);
@@ -154,7 +163,7 @@ module.exports = function couchlib(options) {
 			}
 			else {
 				if(callback) callback(error);
-				else console.log(error); 
+				else console.error(error); 
 			}
 		}); // End get
 	}; // End version
@@ -169,11 +178,50 @@ module.exports = function couchlib(options) {
 
 	/* Get uuids, take in a count and a callback */
 	this.uuid = function(count, callback) {
-		if(callback) this.get("_uuids?count=" + count, callback);
-		else this.get("_uuids?count=" + count, function(response){
+		var data = {"count": count};
+		if(callback) this.get("_uuids", data, callback);
+		else this.get("_uuids", data , function(response){
 			console.log(response);
 		});
 	}; // End uuid 
+
+	/* Create a new document */
+	this.document = function(database, schema, callback) {
+		/* Get a uuid first */
+		var couchlib = this;
+		this.uuid(1, function(result){ 
+			var uuid;
+			var path;
+			result = JSON.parse(result);	
+			if("uuids" in result) {
+				uuid = result.uuids[0];
+				path = database + "/" + uuid;
+				couchlib.put(path, schema, callback);
+			}
+			else{
+				callback({"Error": result});
+			}
+		}); 
+	}; // End document 
+
+	/* Add an attachment */
+	this.attachment = function() {
+		//@TODO
+	}; // End attachment
+
+	/* Replicate a database, take a source, target and a callback */
+	/* An option argument can be taken making 4 arguments, if true */
+	/* then the create_target flag is set */
+	this.replicate = function(source, target, callback) {
+		var create_target = false;
+		var data;
+		if(arguments.length == 4) {
+			create_target = true;	
+			callback = arguments[3];
+		}
+		data = {"source": source, "target": target, "create_target": create_target};
+		this.post("_replicate", data, callback);
+	}; // End replicate
 
 }; // End couchlib
 
