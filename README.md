@@ -88,5 +88,21 @@ To get a basic usage out of this in its current state, you can try the following
     /*Pass in a count of 1 or more and an optional callback, no callback will log the uuids to the console*/
     couchlib.uuids(count, callback);
     ```
-
+    
+    * To create a document:
+    ```javascript
+    /*Pass in a database name, a document object and a callback*/
+    couchlib.document("exampledb", {/*Couch Document Goes Here*/}, callback);
+    ```
+    
+    * To replicate databases
+    ```javascript
+    /*Pass in a source, target, [create_target], callback*/
+    
+    /*Without create_target*/
+    couchlib.replicate("exampledb1", "exampledb2", callback);
+    
+    /*With create target*/
+    couchlib.replicate("exampledb1", "exampledb2", true, callback);
+    ```
 And that's all at the moment, I'll be changing things considerably the more I go along.
