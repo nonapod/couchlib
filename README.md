@@ -98,10 +98,8 @@ To get a basic usage out of this in its current state, you can try the following
     * To replicate databases
     ```javascript
     /*Pass in a source, target, [create_target], callback*/
-    
     /*Without create_target*/
     couchlib.replicate("exampledb1", "exampledb2", callback);
-    
     /*With create target*/
     couchlib.replicate("exampledb1", "exampledb2", true, callback);
     ```
