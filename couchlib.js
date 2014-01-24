@@ -5,6 +5,11 @@
  */
 
 module.exports = function couchlib(options) {
+	/*@TODO Attachments*/
+	/*@TODO Update Design Documents */
+	/*@TODO Unit testing for library */
+	/*@TODO Maybe implement promises, and a more intuitive way of dealing with library */
+
 	/* Set up our class, if the options aren't an object, throw an error */
 	options = options || {};
 	var isObj = Object.prototype.toString.call(options).match(/Object/);
@@ -222,6 +227,33 @@ module.exports = function couchlib(options) {
 		data = {"source": source, "target": target, "create_target": create_target};
 		this.post("_replicate", data, callback);
 	}; // End replicate
+
+	/* Design Documents */ 
+	/* Create a JSON design document, pass in a database name, a name */
+	/* a name for the design, a design doc object, and a callback */
+	/* @TODO Allow to specify a file to load from, and add attachments */
+	/* @TODO Set up document updates */
+	this.design = function(database, name, data, callback) {
+		var path;
+		var self = this;
+		var rev;
+		/* Run a get request first, if the design exists, we'll get the revision
+		 * to overwrite. */
+		this.get(path,  function(response){
+			response = JSON.parse(response);
+			if("error" in response && response.error == "not_found") {
+				/* If the design doesn't exist, use the run function for PUT so we can pass in encoding */	
+				path = database + "/_design/" + name; 
+				self.run({"path": path, "encoding": "binary", "data": data, "method": "PUT"}, callback);
+			}	
+			else {
+				/* Otherwise get the revision number and then do our put request */
+				path = database + "/_design/" + name; 
+				data.rev = response._rev;	
+				self.run({"path": path, "encoding": "binary", "data": data, "method": "PUT"}, callback);
+			}
+		}); // End get
+	}; // End design
 
 }; // End couchlib
 
