@@ -16,7 +16,7 @@ module.exports = function couchlib(options) {
 	/*@TODO Unit testing for library */
 	/*@TODO Maybe implement promises, and a more intuitive way of dealing with library */
 
-    /* Initialise couchlib */
+  /* Initialise couchlib */
 	options = options || {};
 	if(options.host) this.host = options.host;
 	else this.host = "127.0.0.1"; // Default host to localhost
@@ -28,11 +28,11 @@ module.exports = function couchlib(options) {
 	if(options.password) this.password = options.password;
 
 
-    /* run
-     * @params - object, function
-     * @returns - run callback
-     * @description - Take in an object of options, run an http request
-     */
+  /* run
+   * @params - object, function
+   * @returns - run callback
+   * @description - Take in an object of options, run an http request
+   */
 	this.run = function runRequest(options, callback) {
 		/* Take in an object of options; the following is an options object example
 		 *	{
@@ -45,17 +45,17 @@ module.exports = function couchlib(options) {
 		 *	}
 		 */
 		/* Some constants */
-	        var DATA = "data";
-	        var END = "end";
-	        var ERROR = "error";
-	        var GET = "GET";
-	        var POST = "POST";
-	        var PUT = "PUT";
-	        var DELETE = "DELETE";
-	        var http = require('http');
-	        var querystring = require('querystring');
-	        var dataquery;
-	        var request;
+    var DATA = "data";
+    var END = "end";
+    var ERROR = "error";
+    var GET = "GET";
+    var POST = "POST";
+    var PUT = "PUT";
+    var DELETE = "DELETE";
+    var http = require('http');
+    var querystring = require('querystring');
+    var dataquery;
+    var request;
 	
 		/* If we get an alternate host, port or set or auth, use is, otherwise use our instance settings */
 		if(!(options.host) && this.host) options.host = this.host;
@@ -64,10 +64,10 @@ module.exports = function couchlib(options) {
 		if(!(options.path)) options.path = "/";
 		if(options.path.charAt(0) != "/") options.path = "/" + options.path;
 
-	        /* Make sure we now have a host, port and path */
-	        if(!options.host && !options.port && !options.path) {
-	            throw new Error("Request must contain at least  a host, a port and a a path");
-	        }
+    /* Make sure we now have a host, port and path */
+    if(!options.host && !options.port && !options.path) {
+        throw new Error("Request must contain at least  a host, a port and a a path");
+    }
 
 		/* If we have any data, JSON stringify it */
 		if(options.data) {
@@ -126,12 +126,12 @@ module.exports = function couchlib(options) {
 		request.end();	
 	}; // End run
 
-    /* get
-     * @params - string, [object], callback
-     * @returns - runs callback
-     * @description - Run a get request, take optional data object as 2nd parameter
-     *                run a callback to handle request response data. Uses run function.
-     */
+  /* get
+   * @params - string, [object], callback
+   * @returns - runs callback
+   * @description - Run a get request, take optional data object as 2nd parameter
+   *                run a callback to handle request response data. Uses run function.
+   */
 	this.get = function(path,/*[data]*/ callback) {
 		var data = {};
 		if(arguments.length == 3) {
@@ -141,12 +141,12 @@ module.exports = function couchlib(options) {
 		this.run({"method": "GET", "data" : data, "path": path}, callback);
 	};
 
-    /* put
-     * @params - string, [object], callback
-     * @returns - runs callback
-     * @description - Run a put request, take optional data object as 2nd parameter
-     *                run a callback to handle request response data. Uses run function.
-     */
+  /* put
+   * @params - string, [object], callback
+   * @returns - runs callback
+   * @description - Run a put request, take optional data object as 2nd parameter
+   *                run a callback to handle request response data. Uses run function.
+   */
 	this.put = function(path,/*[data]*/ callback) {
         var data = {};
         if(arguments.length == 3) {
@@ -156,12 +156,12 @@ module.exports = function couchlib(options) {
 		this.run({"path": path, "data": data, "method": "PUT"}, callback);
 	};
 
-    /* post
-     * @params - string, [object], callback
-     * @returns - runs callback
-     * @description - Run a post request, take optional data object as 2nd parameter
-     *                run a callback to handle request response data. Uses run function.
-     */
+  /* post
+   * @params - string, [object], callback
+   * @returns - runs callback
+   * @description - Run a post request, take optional data object as 2nd parameter
+   *                run a callback to handle request response data. Uses run function.
+   */
 	this.post = function(path, /*[data]*/ callback) {
         var data = {};
         if(arguments.length == 3) {
@@ -171,12 +171,12 @@ module.exports = function couchlib(options) {
 		this.run({"path": path, "data": data, "method": "POST"}, callback);
 	};
 
-    /* del
-     * @params - string, [object], callback
-     * @returns - runs callback
-     * @description - Run a delete request, take optional data object as 2nd parameter
-     *                run a callback to handle request response data. Uses run function.
-     */
+  /* del
+   * @params - string, [object], callback
+   * @returns - runs callback
+   * @description - Run a delete request, take optional data object as 2nd parameter
+   *                run a callback to handle request response data. Uses run function.
+   */
 	this.del = function(path, /*data*/ callback) {
         var data = {};
         if(arguments.length == 3) {
@@ -187,29 +187,29 @@ module.exports = function couchlib(options) {
 		this.run({"path": path, "data": data, "method": "DELETE"}, callback);
 	};
 
-    /* create
-     * @params - string, callback
-     * @returns - runs callback
-     * @description - create a new database
-     */
+  /* create
+   * @params - string, callback
+   * @returns - runs callback
+   * @description - create a new database
+   */
 	this.create = function(dbname, callback) {
 		this.run({"path": dbname, "method" :"PUT"}, callback);
 	};
 
-    /* destroy
-     * @params - string, callback
-     * @returns - runs callback
-     * @description - remove a database
-     */
+  /* destroy
+   * @params - string, callback
+   * @returns - runs callback
+   * @description - remove a database
+   */
 	this.destroy = function(dbname, callback) {
 		this.run({"path": dbname, "method" :"DELETE"}, callback);
 	};
 
-    /* version
-     * @params - callback
-     * @returns - runs callback
-     * @description - get the couchdb version number
-     */
+  /* version
+   * @params - callback
+   * @returns - runs callback
+   * @description - get the couchdb version number
+   */
 	this.version = function(callback) {
 		this.get("/", function(response){
 			var error = {"Error": "Unable To Get Version"};
@@ -225,11 +225,11 @@ module.exports = function couchlib(options) {
 		});
 	};
 
-    /* databases
-     * @params - callback
-     * @returns - runs callback
-     * @description - list all databases
-     */
+  /* databases
+   * @params - callback
+   * @returns - runs callback
+   * @description - list all databases
+   */
 	this.databases = function(callback) {
 		if(callback) this.get("_all_dbs", callback);
 		else this.get("_all_dbs", function(response){
@@ -237,11 +237,11 @@ module.exports = function couchlib(options) {
 		});
 	};
 
-    /* uuid
-     * @params - integer, callback
-     * @returns - runs callback
-     * @description - gets specified amount of uuids from the server
-     */
+  /* uuid
+   * @params - integer, callback
+   * @returns - runs callback
+   * @description - gets specified amount of uuids from the server
+   */
 	this.uuid = function(count, callback) {
 		var data = {"count": count};
 		if(callback) this.get("_uuids", data, callback);
@@ -250,11 +250,11 @@ module.exports = function couchlib(options) {
 		});
 	};
 
-    /* document
-     * @params - string, object, callback
-     * @returns - runs callback
-     * @description - creates a new document, needs a database name, an object schema and a callback
-     */
+  /* document
+   * @params - string, object, callback
+   * @returns - runs callback
+   * @description - creates a new document, needs a database name, an object schema and a callback
+   */
 	this.document = function(database, schema, callback) {
 		var couchlib = this;
 		this.uuid(1, function(result){ 
@@ -273,20 +273,20 @@ module.exports = function couchlib(options) {
 		}); 
 	};
 
-    /* attachment
-     * @params - @TODO
-     * @returns - runs callback
-     * @description - add an attachment
-     */
+  /* attachment
+   * @params - @TODO
+   * @returns - runs callback
+   * @description - add an attachment
+   */
 	this.attachment = function() {
 		//@TODO
 	};
 
-    /* replicate
-     * @params - string, string, [boolean], callback
-     * @returns - runs callback
-     * @description - Replicate a database, take a source, target, optional create_target flag and callback
-     */
+  /* replicate
+   * @params - string, string, [boolean], callback
+   * @returns - runs callback
+   * @description - Replicate a database, take a source, target, optional create_target flag and callback
+   */
 	this.replicate = function(source, target, /*[create_target]*/callback) {
 		var create_target = false;
 		var data;
@@ -298,12 +298,12 @@ module.exports = function couchlib(options) {
 		this.post("_replicate", data, callback);
 	};
 
-    /* design
-     * @params - string, string, object, callback
-     * @returns - runs callback
-     * @description - create JSON design document, provide a database name, a
-     *                design document name, the schema and a callback
-     */
+  /* design
+   * @params - string, string, object, callback
+   * @returns - runs callback
+   * @description - create JSON design document, provide a database name, a
+   *                design document name, the schema and a callback
+   */
 	/* @TODO Allow to specify a file to load from, and add attachments */
 	/* @TODO Set up document updates */
 	this.design = function(database, name, data, callback) {
