@@ -45,17 +45,17 @@ module.exports = function couchlib(options) {
 		 *	}
 		 */
 		/* Some constants */
-        var DATA = "data";
-        var END = "end";
-        var ERROR = "error";
-        var GET = "GET";
-        var POST = "POST";
-        var PUT = "PUT";
-        var DELETE = "DELETE";
-        var http = require('http');
-        var querystring = require('querystring');
-        var dataquery;
-        var request;
+	        var DATA = "data";
+	        var END = "end";
+	        var ERROR = "error";
+	        var GET = "GET";
+	        var POST = "POST";
+	        var PUT = "PUT";
+	        var DELETE = "DELETE";
+	        var http = require('http');
+	        var querystring = require('querystring');
+	        var dataquery;
+	        var request;
 	
 		/* If we get an alternate host, port or set or auth, use is, otherwise use our instance settings */
 		if(!(options.host) && this.host) options.host = this.host;
