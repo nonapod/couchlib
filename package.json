@@ -1,0 +1,29 @@
+{
+    "name": "couchlib",
+    "preferGlobal": false,
+    "version": "0.0.1",
+    "author": "Leslie Alexander Cordell <silvatici1066@gmail.com",
+    "description": "A CouchDB connector using nodes native http request",
+    "scripts": {
+        "test": "tests.js"
+    },
+    "main": "./couchlib.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/nonapod/couchlib.git"
+    },
+    "keywords": [
+        "couchdb",
+        "connector",
+        "database",
+        "couch"
+    ],
+    "devDependencies": {
+        "mocha": "1.17.x"
+    },
+    "license": "MIT",
+    "engines": {
+        "node": ">=0.10"
+    }
+
+}
