@@ -327,6 +327,5 @@ module.exports = function couchlib(options) {
 		});
 	};
 
-}; // End couchlib
-
+};
 
