@@ -1,6 +1,6 @@
 /*
  * couchlib
- * written by Leslie.A.Cordell 2014
+ * Author: Leslie.A.Cordell 2014
  * MIT LICENSE
  */
 
@@ -193,7 +193,11 @@ module.exports = function couchlib(options) {
    * @description - create a new database
    */
 	this.create = function(dbname, callback) {
-		this.run({"path": dbname, "method" :"PUT"}, callback);
+		this.run({"path": dbname, "method" :"PUT"}, function(response){
+      response = JSON.parse(response);
+      if(callback) callback(response);
+      else console.log(response);
+    });
 	};
 
   /* destroy
@@ -202,7 +206,11 @@ module.exports = function couchlib(options) {
    * @description - remove a database
    */
 	this.destroy = function(dbname, callback) {
-		this.run({"path": dbname, "method" :"DELETE"}, callback);
+		this.run({"path": dbname, "method" :"DELETE"}, function(response){
+      response = JSON.parse(response);
+      if(callback) callback(response);
+      else console.log(response);
+    });
 	};
 
   /* version
@@ -231,10 +239,11 @@ module.exports = function couchlib(options) {
    * @description - list all databases
    */
 	this.databases = function(callback) {
-		if(callback) this.get("_all_dbs", callback);
-		else this.get("_all_dbs", function(response){
-			console.log(response);
-		});
+		this.get("_all_dbs", function(response) {
+      response = JSON.parse(response);
+      if(callback) callback(response);
+      else console.log(response);
+    });
 	};
 
   /* uuid
@@ -244,10 +253,11 @@ module.exports = function couchlib(options) {
    */
 	this.uuid = function(count, callback) {
 		var data = {"count": count};
-		if(callback) this.get("_uuids", data, callback);
-		else this.get("_uuids", data , function(response){
-			console.log(response);
-		});
+		this.get("_uuids", data, function(response){
+      response = JSON.parse(response);
+      if(callback)callback(response);
+      else console.log(response);
+    });
 	};
 
   /* document
@@ -260,12 +270,16 @@ module.exports = function couchlib(options) {
 		this.uuid(1, function(result){ 
 			var uuid;
 			var path;
-			result = JSON.parse(result);	
-			if("uuids" in result) {
-                /* Override uuid with schema id if we provided one */
-				uuid = schema["_id"] || result.uuids[0];
+
+			if(result.uuids) {
+			  /* Override uuid with schema id if we provided one */
+				uuid = schema._id || result.uuids[0];
 				path = database + "/" + uuid;
-				couchlib.put(path, schema, callback);
+				couchlib.put(path, schema, function(response){
+          response = JSON.parse(response);
+          if(callback) callback(response);
+          else callback(response);
+        });
 			}
 			else{
 				callback({"Error": result});
@@ -295,7 +309,10 @@ module.exports = function couchlib(options) {
 			callback = arguments[3];
 		}
 		data = {"source": source, "target": target, "create_target": create_target};
-		this.post("_replicate", data, callback);
+		this.post("_replicate", data, function(response){
+      response = JSON.parse(response);
+      callback(response);
+    });
 	};
 
   /* design
@@ -316,13 +333,21 @@ module.exports = function couchlib(options) {
 			if("error" in response && response.error == "not_found") {
 				/* If the design doesn't exist, use the run function for PUT so we can pass in encoding */	
 				path = database + "/_design/" + name; 
-				self.run({"path": path, "encoding": "binary", "data": data, "method": "PUT"}, callback);
+				self.run({"path": path, "encoding": "binary", "data": data, "method": "PUT"}, function(response){
+          response = JSON.parse(response);
+          if(callback) callback(response);
+          else console.log(response);
+        });
 			}	
 			else {
 				/* Otherwise get the revision number and then do our put request */
 				path = database + "/_design/" + name; 
 				data.rev = response._rev;	
-				self.run({"path": path, "encoding": "binary", "data": data, "method": "PUT"}, callback);
+				self.run({"path": path, "encoding": "binary", "data": data, "method": "PUT"}, function(response){
+          response = JSON.parse(response);
+          if(callback) callback(response);
+          else console.log(response);
+        });
 			}
 		});
 	};
