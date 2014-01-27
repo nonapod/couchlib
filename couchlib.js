@@ -64,10 +64,10 @@ module.exports = function couchlib(options) {
 		if(!(options.path)) options.path = "/";
 		if(options.path.charAt(0) != "/") options.path = "/" + options.path;
 
-        /* Make sure we now have a host, port and path */
-        if(!options.host && !options.port && !options.path) {
-            throw new Error("Request must contain at least  a host, a port and a a path");
-        }
+	        /* Make sure we now have a host, port and path */
+	        if(!options.host && !options.port && !options.path) {
+	            throw new Error("Request must contain at least  a host, a port and a a path");
+	        }
 
 		/* If we have any data, JSON stringify it */
 		if(options.data) {
