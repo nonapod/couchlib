@@ -127,19 +127,19 @@ module.exports = function couchlib(options) {
 	}; // End run
 
   /* get
-   * @params - string, [object], callback
-   * @returns - runs callback
-   * @description - Run a get request, take optional data object as 2nd parameter
-   *                run a callback to handle request response data. Uses run function.
-   */
-	this.get = function(path,/*[data]*/ callback) {
-		var data = {};
-		if(arguments.length == 3) {
-			data = arguments[1];
-			callback = arguments[2];
-		}
-		this.run({"method": "GET", "data" : data, "path": path}, callback);
-	};
+  * @params - string, [object], callback
+  * @returns - runs callback
+  * @description - Run a get request, take optional data object as 2nd parameter
+  *                run a callback to handle request response data. Uses run function.
+  */
+  this.get = function(path,/*[data]*/ callback) {
+    var data = {};
+    if(arguments.length == 3) {
+      data = arguments[1];
+      callback = arguments[2];
+    }
+    this.run({"method": "GET", "data" : data, "path": path}, callback);
+  };
 
   /* copy
    * @params - string, string, callback
@@ -156,14 +156,14 @@ module.exports = function couchlib(options) {
    * @description - Run a put request, take optional data object as 2nd parameter
    *                run a callback to handle request response data. Uses run function.
    */
-	this.put = function(path,/*[data]*/ callback) {
-        var data = {};
-        if(arguments.length == 3) {
-            data = arguments[1];
-            callback = arguments[2];
-        }
-		this.run({"path": path, "data": data, "method": "PUT"}, callback);
-	};
+  this.put = function(path,/*[data]*/ callback) {
+    var data = {};
+    if(arguments.length == 3) {
+      data = arguments[1];
+      callback = arguments[2];
+    }
+    this.run({"path": path, "data": data, "method": "PUT"}, callback);
+  };
 
   /* post
    * @params - string, [object], callback
@@ -171,14 +171,14 @@ module.exports = function couchlib(options) {
    * @description - Run a post request, take optional data object as 2nd parameter
    *                run a callback to handle request response data. Uses run function.
    */
-	this.post = function(path, /*[data]*/ callback) {
-        var data = {};
-        if(arguments.length == 3) {
-            data = arguments[1];
-            callback = arguments[2];
-        }
-		this.run({"path": path, "data": data, "method": "POST"}, callback);
-	};
+  this.post = function(path, /*[data]*/ callback) {
+    var data = {};
+    if(arguments.length == 3) {
+      data = arguments[1];
+      callback = arguments[2];
+    }
+    this.run({"path": path, "data": data, "method": "POST"}, callback);
+  };
 
   /* del
    * @params - string, [object], callback
@@ -186,150 +186,150 @@ module.exports = function couchlib(options) {
    * @description - Run a delete request, take optional data object as 2nd parameter
    *                run a callback to handle request response data. Uses run function.
    */
-	this.del = function(path, /*data*/ callback) {
-        var data = {};
-        if(arguments.length == 3) {
-            data = arguments[1];
-            callback = arguments[2];
-        }
-		data._deleted = true;
-		this.run({"path": path, "data": data, "method": "DELETE"}, callback);
-	};
+  this.del = function(path, /*data*/ callback) {
+    var data = {};
+    if(arguments.length == 3) {
+      data = arguments[1];
+      callback = arguments[2];
+    }
+    data._deleted = true;
+    this.run({"path": path, "data": data, "method": "DELETE"}, callback);
+  };
 
   /* create
    * @params - string, callback
    * @returns - runs callback
    * @description - create a new database
    */
-	this.create = function(dbname, callback) {
-		this.run({"path": dbname, "method" :"PUT"}, function(response){
+  this.create = function(dbname, callback) {
+    this.run({"path": dbname, "method" :"PUT"}, function(response){
       response = JSON.parse(response);
       if(callback) callback(response);
       else console.log(response);
     });
-	};
+  };
 
   /* destroy
    * @params - string, callback
    * @returns - runs callback
    * @description - remove a database
    */
-	this.destroy = function(dbname, callback) {
-		this.run({"path": dbname, "method" :"DELETE"}, function(response){
+  this.destroy = function(dbname, callback) {
+    this.run({"path": dbname, "method" :"DELETE"}, function(response){
       response = JSON.parse(response);
       if(callback) callback(response);
       else console.log(response);
     });
-	};
+  };
 
   /* version
    * @params - callback
    * @returns - runs callback
    * @description - get the couchdb version number
    */
-	this.version = function(callback) {
-		this.get("/", function(response){
-			var error = {"Error": "Unable To Get Version"};
-			response = JSON.parse(response);
-			if("version" in response) {
-				if(callback) callback(response.version);
-				else console.log(response.version); 
-			}
-			else {
-				if(callback) callback(error);
-				else console.error(error); 
-			}
-		});
-	};
+  this.version = function(callback) {
+    this.get("/", function(response){
+      var error = {"Error": "Unable To Get Version"};
+      response = JSON.parse(response);
+      if("version" in response) {
+        if(callback) callback(response.version);
+        else console.log(response.version);
+      }
+      else {
+        if(callback) callback(error);
+        else console.error(error);
+      }
+    });
+  };
 
   /* databases
    * @params - callback
    * @returns - runs callback
    * @description - list all databases
    */
-	this.databases = function(callback) {
-		this.get("_all_dbs", function(response) {
+  this.databases = function(callback) {
+    this.get("_all_dbs", function(response) {
       response = JSON.parse(response);
       if(callback) callback(response);
       else console.log(response);
     });
-	};
+  };
 
   /* uuid
    * @params - integer, callback
    * @returns - runs callback
    * @description - gets specified amount of uuids from the server
    */
-	this.uuid = function(count, callback) {
-		var data = {"count": count};
-		this.get("_uuids", data, function(response){
+  this.uuid = function(count, callback) {
+    var data = {"count": count};
+    this.get("_uuids", data, function(response){
       response = JSON.parse(response);
       if(callback)callback(response);
       else console.log(response);
     });
-	};
+  };
 
   /* document
    * @params - string, object, callback
    * @returns - runs callback
    * @description - creates a new document, needs a database name, an object schema and a callback
    */
-	this.document = function(database, schema, callback) {
-		var couchlib = this;
-		this.uuid(1, function(result){ 
-			var uuid;
-			var path;
+  this.document = function(database, schema, callback) {
+    var couchlib = this;
+    this.uuid(1, function(result){
+      var uuid;
+      var path;
 
-			if(result.uuids) {
-			  /* Override uuid with schema id if we provided one */
-				uuid = schema._id || result.uuids[0];
-				path = database + "/" + uuid;
-				couchlib.put(path, schema, function(response){
+      if(result.uuids) {
+        /* Override uuid with schema id if we provided one */
+        uuid = schema._id || result.uuids[0];
+        path = database + "/" + uuid;
+        couchlib.put(path, schema, function(response){
           response = JSON.parse(response);
           if(callback) callback(response);
           else console.log(response);
         });
-			}
-			else{
-				if(callback) callback(result);
+      }
+      else{
+        if(callback) callback(result);
         else console.log(result)
-			}
-		}); 
-	};
+      }
+    });
+  };
 
   /* attachment
    * @params - @TODO
    * @returns - runs callback
    * @description - add an attachment
    */
-	this.attachment = function() {
-		//@TODO
-	};
+  this.attachment = function() {
+    //@TODO
+  };
 
   /* replicate
    * @params - string, string, [boolean], callback
    * @returns - runs callback
    * @description - Replicate a database, take a source, target, optional create_target flag and callback
    */
-	this.replicate = function(source, target, /*[create_target]*/callback) {
-		var create_target = false;
-		var data;
-		if(arguments.length == 4) {
-			create_target = true;	
-			callback = arguments[3];
-		}
-		data = {"source": source, "target": target, "create_target": create_target};
-		this.post("_replicate", data, function(response){
+  this.replicate = function(source, target, /*[create_target]*/callback) {
+    var create_target = false;
+    var data;
+    if(arguments.length == 4) {
+      create_target = true;
+      callback = arguments[3];
+    }
+    data = {"source": source, "target": target, "create_target": create_target};
+    this.post("_replicate", data, function(response){
       response = JSON.parse(response);
       callback(response);
     });
-	};
+  };
 
   /* design
    * @description - JSON design document functions,
    *                name parameters refer to the design name
    */
-	this.design = {
+  this.design = {
     /* Create
     *  @params - string, string, object, callback
     *  @returns - runs callback
@@ -407,7 +407,7 @@ module.exports = function couchlib(options) {
       });
     }
 
-	};
+  };
 
   /* view
    * @params - none
