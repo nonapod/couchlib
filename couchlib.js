@@ -330,7 +330,7 @@ module.exports = function couchlib(options) {
    *                name parameters refer to the design name
    */
   this.design = {
-    /* Create
+    /* create
     *  @params - string, string, object, callback
     *  @returns - runs callback
     *  @description - create a new design document
@@ -344,7 +344,7 @@ module.exports = function couchlib(options) {
       });
     },
 
-    /* Update
+    /* update
      * @params - string, string, object, callback
      * @returns - runs callback
      * @description - overwrites a design document, if no revision number is provided, the latest is taken
@@ -367,7 +367,7 @@ module.exports = function couchlib(options) {
         }
       });
     },
-    /* Get
+    /* get
      * @params - string, string, callback
      * @returns - runs callback
      * @description - get a design document
@@ -380,7 +380,7 @@ module.exports = function couchlib(options) {
         else console.log(response);
       });
     },
-    /* Info
+    /* info
      * @params - string, string, callback
      * @returns - runs callback
      * @description - get a design document info
@@ -393,7 +393,7 @@ module.exports = function couchlib(options) {
         else console.log(response);
       });
     },
-    /* Copy
+    /* copy
      * @params - string, string, string, callback
      * @returns - runs callback
      * @description - copy a design document to a provided destination name
@@ -411,24 +411,28 @@ module.exports = function couchlib(options) {
 
   /* view
    * @params - none
-   * @returns - nothing
+   * @returns - runs callback
    * @description - holds functions within for creating, getting and deleting views
    * */
   this.view = {
-    /* Update */
-    update : function updateView(database, view, data, callback) {
+    /* run
+     * @params - string, string, object, callback
+     * @returns - runs callback
+     * @description - runs a post on the view, can take in keys for data
+     * */
+    run : function runView(database, view, data, callback) {
       var path = database + "/_view/" + view;
-      self.put(path, data, function(response){
+      self.post(path, data, function(response){
         response = JSON.parse(response);
         if(callback) callback(response);
         else console.log(response);
       });
     },
-    /* Delete */
-    delete : function deleteView(database, design, view, callback) {
-
-    },
-    /* Get */
+    /* get
+     * @params - string, string, object, callback
+     * @returns - runs callback
+     * @description - runs a get on the view
+    * */
     get : function getView(database, design, view, callback) {
       var path = database + "/_design/" + design + "/_view/" + view;
       self.get(path, {}, function(response){
