@@ -35,96 +35,96 @@ module.exports = function couchlib(options) {
    */
   this.run = function runRequest(options, callback) {
     /* Take in an object of options; the following is an options object example
-     *	{
-     *		"host": "www.example.com",
-     *		"port": "80",
-     *		"method": "POST",
-     *		"path": "/index?action=1223&php=off",
-     *		"headers": {"Header Name": "Header Option"}
-     *		"auth" : "user:password"
-     *	}
-     */
-      /* Some constants */
-      var DATA = "data";
-      var END = "end";
-      var ERROR = "error";
-      var GET = "GET";
-      var POST = "POST";
-      var PUT = "PUT";
-      var DELETE = "DELETE";
-      var http = require('http');
-      var querystring = require('querystring');
-      var dataquery;
-      var request;
+    *	{
+    *		"host": "www.example.com",
+    *		"port": "80",
+    *		"method": "POST",
+    *		"path": "/index?action=1223&php=off",
+    *		"headers": {"Header Name": "Header Option"}
+    *		"auth" : "user:password"
+    *	}
+    */
+    /* Some constants */
+    var DATA = "data";
+    var END = "end";
+    var ERROR = "error";
+    var GET = "GET";
+    var POST = "POST";
+    var PUT = "PUT";
+    var DELETE = "DELETE";
+    var http = require('http');
+    var querystring = require('querystring');
+    var dataquery;
+    var request;
 
-      /* If we get an alternate host, port or set or auth, use is, otherwise use our instance settings */
-      if(!(options.host) && this.host) options.host = this.host;
-      if(!(options.port) && this.port) options.port = this.port;
-      if(!(options.auth) && this.user && this.password) options.auth = (this.user + ":" + this.password);
-      if(!(options.path)) options.path = "/";
-      if(options.path.charAt(0) != "/") options.path = "/" + options.path;
+    /* If we get an alternate host, port or set or auth, use is, otherwise use our instance settings */
+    if(!(options.host) && this.host) options.host = this.host;
+    if(!(options.port) && this.port) options.port = this.port;
+    if(!(options.auth) && this.user && this.password) options.auth = (this.user + ":" + this.password);
+    if(!(options.path)) options.path = "/";
+    if(options.path.charAt(0) != "/") options.path = "/" + options.path;
 
-      /* Make sure we now have a host, port and path */
-      if(!options.host && !options.port && !options.path) {
-          throw new Error("Request must contain at least  a host, a port and a a path");
+    /* Make sure we now have a host, port and path */
+    if(!options.host && !options.port && !options.path) {
+        throw new Error("Request must contain at least  a host, a port and a a path");
+    }
+
+    /* If we have any data, JSON stringify it */
+    if(options.data) {
+      /* Get methods use a query string rather than passing data */
+      if(options.method == GET) {
+        dataquery = querystring.stringify(options.data);
+        /* If we get a valid data querystring, append it to the path along with a ? */
+        if(dataquery.length) options.path = options.path + "?" + querystring.stringify(options.data);
+                options.data = null; // Wipe the data object, we don't need it
       }
-
-      /* If we have any data, JSON stringify it */
-      if(options.data) {
-        /* Get methods use a query string rather than passing data */
-        if(options.method == GET) {
-          dataquery = querystring.stringify(options.data);
-          /* If we get a valid data querystring, append it to the path along with a ? */
-          if(dataquery.length) options.path = options.path + "?" + querystring.stringify(options.data);
-                  options.data = null; // Wipe the data object, we don't need it
+      /* If there's no headers, set some default ones */
+      if(!(options.headers)) {
+        options.headers = {"Accept": "application/json", "Content-Type": "application/json"};
+      }
+      else {
+        /* If we do have headers, but accept isn't in them, default it to JSON */
+        if(!("Accept" in options.headers)) {
+          options.headers["Accept"] = "application/json";
         }
-        /* If there's no headers, set some default ones */
-        if(!(options.headers)) {
-          options.headers = {"Accept": "application/json", "Content-Type": "application/json"};
-        }
-        else {
-          /* If we do have headers, but accept isn't in them, default it to JSON */
-          if(!("Accept" in options.headers)) {
-            options.headers["Accept"] = "application/json";
-          }
-          /* If we do have headers, but content-type isn't in them, default it to JSON */
-          if(!("Content-Type" in options.headers)) {
-            options.headers["Content-Type"] = "application/json";
-          }
+        /* If we do have headers, but content-type isn't in them, default it to JSON */
+        if(!("Content-Type" in options.headers)) {
+          options.headers["Content-Type"] = "application/json";
         }
       }
+    }
 
-      /* Callback for our request */
-      function onRequest(res) {
-        var result = "";
-        /* Everytime we get a piece of data, add it to our result */
-        res.on(DATA, function appendToResult(segment) {
-          result += segment;
-        }); // End appendToResult
+    /* Callback for our request */
+    function onRequest(res) {
+      var result = "";
+      /* Everytime we get a piece of data, add it to our result */
+      res.on(DATA, function appendToResult(segment) {
+        result += segment;
+      }); // End appendToResult
 
-        /* As soon as we get the end signal, pass our result to the callback or console log it */
-        res.on(END, function returnResult() {
-          if(callback) callback(result);
-          else console.log(result);
-        }); // End returnResult
-      } // End callback
+      /* As soon as we get the end signal, pass our result to the callback or console log it */
+      res.on(END, function returnResult() {
+        if(callback) callback(result);
+        else console.log(result);
+      }); // End returnResult
+    } // End callback
 
-      /* Callback for error handling; pass it to a callback or log it to the console */
-      function onError(error) {
-        error = {"Error": error};
-        if(callback) callback(error);
-        else console.log(error);
-      }
+    /* Callback for error handling; pass it to a callback or log it to the console */
+    function onError(error) {
+      error = {"Error": error};
+      if(callback) callback(error);
+      else console.log(error);
+    }
 
-      /* Stringify the data */
-      if(options.data) options.data = JSON.stringify(options.data);
-      /* Go ahead and run our request */
-      request = http.request(options, onRequest);
-      /* If we have data, and we're not running a get request, write it to the request it */
-      if(options.method != GET && options.data) request.write(options.data);
-      request.on(ERROR, onError);
-      request.end();
-	}; // End run
+    /* Stringify the data */
+    if(options.data) options.data = JSON.stringify(options.data);
+    /* Go ahead and run our request */
+    request = http.request(options, onRequest);
+    /* If we have data, and we're not running a get request, write it to the request it */
+    if(options.method != GET && options.data) request.write(options.data);
+    request.on(ERROR, onError);
+    request.end();
+  }; // End run
 
   /* get
   * @params - string, [object], callback
