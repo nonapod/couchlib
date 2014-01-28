@@ -15,7 +15,7 @@ module.exports = function couchlib(options) {
 	/*@TODO Update Design Documents */
 	/*@TODO Unit testing for library */
 	/*@TODO Maybe implement promises, and a more intuitive way of dealing with library */
-
+  var self = this;
   /* Initialise couchlib */
 	options = options || {};
 	if(options.host) this.host = options.host;
@@ -140,6 +140,15 @@ module.exports = function couchlib(options) {
 		}
 		this.run({"method": "GET", "data" : data, "path": path}, callback);
 	};
+
+  /* copy
+   * @params - string, string, callback
+   * @returns - runs callback
+   * @description - Run a copy request, requires a path, destination name, data and callback
+   */
+  this.copy = function(path, destination, callback) {
+    this.run({"method": "COPY", "path": path, "headers": {"Destination": destination}}, callback);
+  };
 
   /* put
    * @params - string, [object], callback
@@ -278,11 +287,12 @@ module.exports = function couchlib(options) {
 				couchlib.put(path, schema, function(response){
           response = JSON.parse(response);
           if(callback) callback(response);
-          else callback(response);
+          else console.log(response);
         });
 			}
 			else{
-				callback({"Error": result});
+				if(callback) callback(result);
+        else console.log(result)
 			}
 		}); 
 	};
@@ -316,41 +326,117 @@ module.exports = function couchlib(options) {
 	};
 
   /* design
-   * @params - string, string, object, callback
-   * @returns - runs callback
-   * @description - create JSON design document, provide a database name, a
-   *                design document name, the schema and a callback
+   * @description - JSON design document functions,
+   *                name parameters refer to the design name
    */
-	/* @TODO Allow to specify a file to load from, and add attachments */
-	/* @TODO Set up document updates */
-	this.design = function(database, name, data, callback) {
-		var path;
-		var self = this;
-		var rev;
-		/* Run a get request first, to see if design exists */
-		this.get(path,  function(response){
-			response = JSON.parse(response);
-			if("error" in response && response.error == "not_found") {
-				/* If the design doesn't exist, use the run function for PUT so we can pass in encoding */	
-				path = database + "/_design/" + name; 
-				self.run({"path": path, "encoding": "binary", "data": data, "method": "PUT"}, function(response){
-          response = JSON.parse(response);
+	this.design = {
+    /* Create
+    *  @params - string, string, object, callback
+    *  @returns - runs callback
+    *  @description - create a new design document
+    * */
+    create : function createDesign(database, name, data, callback) {
+      var path = database + "/_design/" + name;
+      self.run({"path": path, "encoding": "binary", "data": data, "method": "PUT"}, function(response){
+        response = JSON.parse(response);
+        if(callback) callback(response);
+        else console.log(response);
+      });
+    },
+
+    /* Update
+     * @params - string, string, object, callback
+     * @returns - runs callback
+     * @description - overwrites a design document, if no revision number is provided, the latest is taken
+     * */
+    update : function updateDesign(database, name, data, callback) {
+      var path = database + "/_design/" + name;
+      self.get(path, {}, function(response){
+        response = JSON.parse(response);
+        if(response._rev) {
+          if(!data._rev) data._rev = response._rev;
+          self.run({"path": path, "encoding": "binary", "data": data, "method": "PUT"}, function(response){
+            response = JSON.parse(response);
+            if(callback) callback(response);
+            else console.log(response);
+          });
+        }
+        else {
           if(callback) callback(response);
-          else console.log(response);
-        });
-			}	
-			else {
-				/* Otherwise get the revision number and then do our put request */
-				path = database + "/_design/" + name; 
-				data.rev = response._rev;	
-				self.run({"path": path, "encoding": "binary", "data": data, "method": "PUT"}, function(response){
-          response = JSON.parse(response);
-          if(callback) callback(response);
-          else console.log(response);
-        });
-			}
-		});
+          else console.log(response)
+        }
+      });
+    },
+    /* Get
+     * @params - string, string, callback
+     * @returns - runs callback
+     * @description - get a design document
+     */
+    get : function getDesign(database, name, callback) {
+      var path = database + "/_design/" + name;
+      self.get(path, {}, function(response){
+        response = JSON.parse(response);
+        if(callback) callback(response);
+        else console.log(response);
+      });
+    },
+    /* Info
+     * @params - string, string, callback
+     * @returns - runs callback
+     * @description - get a design document info
+     */
+    info : function infoDesign(database, name, callback) {
+      var path = database + "/_design/" + name + "/_info";
+      self.get(path, {}, function(response){
+        response = JSON.parse(response);
+        if(callback) callback(response);
+        else console.log(response);
+      });
+    },
+    /* Copy
+     * @params - string, string, string, callback
+     * @returns - runs callback
+     * @description - copy a design document to a provided destination name
+     */
+    copy : function copyDesign(database, name, destination, callback) {
+      var path = database + "/_design/" + name;
+      self.copy(path, destination, function(response){
+        response = JSON.parse(response);
+        if(callback) callback(response);
+        else console.log(response);
+      });
+    }
+
 	};
 
+  /* view
+   * @params - none
+   * @returns - nothing
+   * @description - holds functions within for creating, getting and deleting views
+   * */
+  this.view = {
+    /* Update */
+    update : function updateView(database, view, data, callback) {
+      var path = database + "/_view/" + view;
+      self.put(path, data, function(response){
+        response = JSON.parse(response);
+        if(callback) callback(response);
+        else console.log(response);
+      });
+    },
+    /* Delete */
+    delete : function deleteView(database, design, view, callback) {
+
+    },
+    /* Get */
+    get : function getView(database, design, view, callback) {
+      var path = database + "/_design/" + design + "/_view/" + view;
+      self.get(path, {}, function(response){
+        response = JSON.parse(response);
+        if(callback) callback(response);
+        else console.log(response);
+      });
+    }
+  };
 };
 

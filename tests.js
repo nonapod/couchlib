@@ -61,7 +61,7 @@ describe('couchlib', function(){
   }); // End .create()
 
   /* couchlib.destroy() */
-  describe(".destroy", function(){
+  describe(".destroy()", function(){
     var id = ("test" + Math.floor((Math.random()*100)+(Math.random()*100)));
     it('should try to destroy a non existent database and then return a "not_found" error ', function (done){
       couchlib.destroy(id, function destroyNonExistent(response){
@@ -130,8 +130,8 @@ describe('couchlib', function(){
     }); // End it
   }); // End .replicate()
 
-  /* couchlib.design() */
-  describe('.design()', function(){
+  /* couchlib.design.create() */
+  describe('.design.create()', function(){
     var id = ("test" + Math.floor((Math.random()*100)+(Math.random()*100)));
     var name = ("view" + Math.floor((Math.random()*100)+(Math.random()*100)));
     var design = {
@@ -141,23 +141,207 @@ describe('couchlib', function(){
         }
       }
     };
-    it('should create a database, create a design document, then destroy the database', function(done){
+    it('should create a database, create a design document, try to duplicate, fail, then destroy the database', function(done){
       /* create a new database */
       couchlib.create(id, function createDatabase(response){
         /* should return {"ok": true} */
         assert.equal(true, response.ok);
         /* create the design */
-        couchlib.design(id, name, design, function createDesign(response){
+        couchlib.design.create(id, name, design, function createDesign(response){
           /* should return {"ok": true} */
           assert.equal(true, response.ok);
-          couchlib.destroy(id, function destroyDatabase(response){
-            /* should return {"ok": true} */
-            assert.equal(true, response.ok);
-            done();
-          }); // End destroyDatabase
+          /* Try to duplicate, should return Document update conflict */
+          couchlib.design.create(id, name, design, function duplicateDesign(response){
+            /* should return {"error": "conflict"} */
+            assert.equal("conflict", response.error);
+            couchlib.destroy(id, function destroyDatabase(response){
+              /* should return {"ok": true} */
+              assert.equal(true, response.ok);
+              done();
+            }); // End destroyDatabase
+          }); // End duplicateDesign
         }); // End createDesign
       }); // End createDatabase
     }); // End it
-  }); // End .design()
+  }); // End .design.create()
+
+  /* couchlib.design.update() */
+  describe('.design.update()', function(){
+    var id = ("test" + Math.floor((Math.random()*100)+(Math.random()*100)));
+    var name = ("view" + Math.floor((Math.random()*100)+(Math.random()*100)));
+    var design = {
+      "views": {
+        "testview": {
+          "map": "function(doc){ emit(doc._id, doc._rev)}"
+        }
+      }
+    };
+    it('should create a database, create a design document, try to update, then destroy the database', function(done){
+      /* create a new database */
+      couchlib.create(id, function createDatabase(response){
+        /* should return {"ok": true} */
+        assert.equal(true, response.ok);
+        /* create the design */
+        couchlib.design.create(id, name, design, function createDesign(response){
+          /* should return {"ok": true} */
+          assert.equal(true, response.ok);
+          /* Try to update the document */
+          couchlib.design.update(id, name, design, function updateDesign(response){
+            /* should return {"ok": true} */
+            assert.equal(true, response.ok);
+            couchlib.destroy(id, function destroyDatabase(response){
+              /* should return {"ok": true} */
+              assert.equal(true, response.ok);
+              done();
+            }); // End destroyDatabase
+          }); // End updateDesign
+        }); // End createDesign
+      }); // End createDatabase
+    }); // End it
+  }); // End .design.update()
+
+  /* couchlib.design.get() */
+  describe('.design.get()', function(){
+    var id = ("test" + Math.floor((Math.random()*100)+(Math.random()*100)));
+    var name = ("view" + Math.floor((Math.random()*100)+(Math.random()*100)));
+    var design = {
+      "views": {
+        "testview": {
+          "map": "function(doc){ emit(doc._id, doc._rev)}"
+        }
+      }
+    };
+    it('should create a database, create a design document, get it, then destroy the database', function(done){
+      /* create a new database */
+      couchlib.create(id, function createDatabase(response){
+        /* should return {"ok": true} */
+        assert.equal(true, response.ok);
+        /* create the design */
+        couchlib.design.create(id, name, design, function createDesign(response){
+          /* should return {"ok": true} */
+          assert.equal(true, response.ok);
+          /* Try to get the new design document */
+          couchlib.design.get(id, name, function getDesign(response){
+            /* should return object containing new revision number */
+            assert.equal(true, "_rev" in response);
+            couchlib.destroy(id, function destroyDatabase(response){
+              /* should return {"ok": true} */
+              assert.equal(true, response.ok);
+              done();
+            }); // End destroyDatabase
+          }); // End getDesign
+        }); // End createDesign
+      }); // End createDatabase
+    }); // End it
+  }); // End .design.get()
+
+  /* couchlib.design.info() */
+  describe('.design.info()', function(){
+    var id = ("test" + Math.floor((Math.random()*100)+(Math.random()*100)));
+    var name = ("view" + Math.floor((Math.random()*100)+(Math.random()*100)));
+    var design = {
+      "views": {
+        "testview": {
+          "map": "function(doc){ emit(doc._id, doc._rev)}"
+        }
+      }
+    };
+    it('should create a database, create a design document, get the info, then destroy the database', function(done){
+      /* create a new database */
+      couchlib.create(id, function createDatabase(response){
+        /* should return {"ok": true} */
+        assert.equal(true, response.ok);
+        /* create the design */
+        couchlib.design.create(id, name, design, function createDesign(response){
+          /* should return {"ok": true} */
+          assert.equal(true, response.ok);
+          /* Try to get the new design document info */
+          couchlib.design.info(id, name, function getDesignInfo(response){
+            /* should return object containing a key/value pair identified by name */
+            assert.equal(true, "name" in response);
+            couchlib.destroy(id, function destroyDatabase(response){
+              /* should return {"ok": true} */
+              assert.equal(true, response.ok);
+              done();
+            }); // End destroyDatabase
+          }); // End getDesignInfo
+        }); // End createDesign
+      }); // End createDatabase
+    }); // End it
+  }); // End .design.info()
+
+  /* couchlib.design.copy() */
+  describe('.design.copy()', function(){
+    var id = ("test" + Math.floor((Math.random()*1000)+(Math.random()*1000)));
+    var name = ("design" + Math.floor((Math.random()*1000)+(Math.random()*1000)));
+    var destination = ("destination" + Math.floor((Math.random()*1000)+(Math.random()*1000)));
+    var design = {
+      "views": {
+        "testview": {
+          "map": "function(doc){ emit(doc._id, doc._rev)}"
+        }
+      }
+    };
+    it('should create a database, create a design document, duplicate to a destination, then destroy the database', function(done){
+      /* create a new database */
+      couchlib.create(id, function createDatabase(response){
+        /* should return {"ok": true} */
+        assert.equal(true, response.ok);
+        /* create the design */
+        couchlib.design.create(id, name, design, function createDesign(response){
+          /* should return {"ok": true} */
+          assert.equal(true, response.ok);
+          /* Try to copy the design doc to a new destination */
+          couchlib.design.copy(id, name, destination, function copyDesign(response){
+            /* should return {"ok": true} */
+            assert.equal(true, response.ok);
+            couchlib.destroy(id, function destroyDatabase(response){
+              /* should return {"ok": true} */
+              assert.equal(true, response.ok);
+              done();
+            }); // End destroyDatabase
+          }); // End copyDesign
+        }); // End createDesign
+      }); // End createDatabase
+    }); // End it
+  }); // End .design.copy()
+
+  /* couchlib.view.get() */
+  describe(".view.get()", function(){
+    var id = ("test" + Math.floor((Math.random()*100)+(Math.random()*100)));
+    var design_name = ("designname" + Math.floor((Math.random()*100)+(Math.random()*100)));
+    var design = {
+      "_id": "testing",
+      "language": "javascript",
+      "views": {
+        "testview": {
+          "map": "function(doc){ emit(doc._id, doc._rev)}"
+        }
+      }
+    };
+    it("should create a new database, a design doc with a view, get the view, then delete the database", function(done){
+      /* create the blank database */
+      couchlib.create(id, function createDatabase(response){
+        /* should return {"ok": true} */
+        assert.equal(true, response.ok);
+        /* Create design document */
+        couchlib.design.create(id, design_name, design, function createDesign(response){
+          /* should return {"ok": true} */
+          assert.equal(true, response.ok);
+          couchlib.view.get(id, design_name, "testview", function getView(response){
+            /* should return {"ok": true} */
+            assert.equal(true, "total_rows" in response);
+            couchlib.destroy(id, function destroyDatabase(response){
+              /* should return {"ok": true} */
+              assert.equal(true, response.ok);
+              done();
+            }); // End destroyDatabase
+          }); // End getView
+        }); // End createDesign
+      }); // End createDatabase
+    }); // End it
+  }); // End describe
+
+
 
 }); // End couchlib
