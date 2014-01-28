@@ -3,9 +3,9 @@ couchlib
 
 A couchdb interface for nodejs using the http module.
 
-**Please note this library is in a very early phase of development, and only a few days young, so not much error checking and lots to tidy up and change! I decided to code my own couchdb connector to use in my future projects, including a new personal app I'm writing at the moment. As soon as things are stablized and balanced out, I'll restructure the README to reflect a more API based format. Please don't expect to much of this just yet.**
+**This library is starting to take better shape, although it's still a few days in its infancy, things are starting to lay out much nicer. Originally I was planning to make a couchdb connector for a new site/app that I'm making, however now I'm enjoying it so much I'm going to try to implement the entire couch http api here, and then make a sails.js connector, just because.**
 
-To get a basic usage out of this in its current state, you can try the following:
+Not everything is hooked in so far, and things are changing a lot, here's what can be done at the moment, bare in mind that everything is being sifted out into objects with related functions, so it looks more like the original api. All tests are being done using Mocha:
 
 1. Import the library
     ```javascript
@@ -19,88 +19,122 @@ To get a basic usage out of this in its current state, you can try the following
       "user": "admin", 
       "password": "password"});
     ```
-
-3. Now go ahead and make some requests:
+3. Here are the currently implemented method requests, in all instances, if no callback is required, the response is logged to the console, good for testing with REPL:
+    * A run request, pretty much everything uses this, use this for more customized requests when you want to add headers and lots of options etc:
     ```javascript
-    /* Set up a callback */
-    var callback = function(response) {
-      console.log(response);
-    };
+    /* Options Example */
+    var options = {
+    		"host": "www.example.com",
+    		"port": "80",
+    		"method": "POST",
+    		"path": "/index?action=1223&php=off",
+    		"headers": {"Header Name": "Header Option"}
+    		"auth" : "user:password",
+            "data": {"name": "some data in here"}
+    }
+    couchlib.run(options, callback(res));
+    ```    
 
-    /* Set up some post data */
-    var postdata = {
-      "name": "testuser",
-      "password": "password",
-      "roles": [],
-      "type": "user",
-    };
+    * A get request (optional data is converted to a querystring):
+    ```javascript
+    couchlib.get("path", /* [optional data] */, callback(res));
+    ```
     
-    /* Run the request */
-    couchlib.run({"data": postdata, "method": "PUT", "path": "/_users/org.couchdb.user:password"}, callback);
-    couchlib.run({"method": "GET", "path": "/_users/org.couchdb.user:testuser"}, callback);
+    * A post request:
+    ```javascript
+    couchlib.post("path", /*[optional data]*/, callback(res));
+    ```
+    
+    * A put request:
+    ```javascript
+    couchlib.put("path", /*[optional data]*/, callback(res));
+    ```
+    
+    * A delete request, (automatically adds _deleted flag):
+    ```javascript
+    couchlib.del("path", /*[optional data]*/, callback(res));
+    ```
+    
+    * A copy request:
+    ```javascript
+    couchlib.copy("path", "destination", callback(res));
     ```
 
-4. To make things easier there are a few helper functions:
+4. Here are the working methods, callbacks are optional, if none is provided, they are outputted to the console. All callback responses are parsed JSON:
     * To create a database:
     ```javascript
-    couchlib.create("database name", callback);
+    couchlib.create("database name", callback(res));
     ```
 
     * To delete a database:
     ```javascript
-    couchlib.destroy("database name", callback);
-    ```
-    
-    * To run a put request:
-    ```javascript
-    var data = { /*Put some data here*/ };
-    couchlib.put("path/goes/here", data, callback);
-    ```
-    
-    * To run a get request:
-    ```javascript
-    /*Without data*/
-    couchlib.get("path/goes/here", callback);
-    /*With data*/
-    couchlib.git("path/goes/here", {"data": "goes here", callback});
-    ```
-    
-    * To run a delete request (This automatically adds the _deleted flag):
-    ```javascript
-    var data = { /*Put some data here*/ };
-    couchlib.delete("path/goes/here", data, callback);
+    couchlib.destroy("database name", callback(res));
     ```
     
     * To get the CouchDB version:
     ```javascript
-    /*If no callback is provided, the version will be logged to the console*/
-    couchlib.version(callback);
+    couchlib.version(callback(res));
     ```
     
     * To show a list of databases:
     ```javascript
-    /*If no callback is provided, the database list will be logged to the console*/
-    couchlib.databases(callback);
+    couchlib.databases(callback(res));
     ```
     
     * To get some uuids:
     ```javascript
     /*Pass in a count of 1 or more and an optional callback, no callback will log the uuids to the console*/
-    couchlib.uuids(count, callback);
+    var count = 1;
+    couchlib.uuids(count, callback(res));
     ```
     
     * To create a document:
     ```javascript
     /*Pass in a database name, a document object and a callback*/
-    couchlib.document("exampledb", {/*Couch Document Goes Here*/}, callback);
+    couchlib.document("exampledb", {/*Couch Document Goes Here*/}, callback(res));
     ```
     
     * To replicate databases
     ```javascript
     /*Pass in a source, target, [create_target], callback*/
     /*Without create_target*/
-    couchlib.replicate("exampledb1", "exampledb2", callback);
+    couchlib.replicate("source database", "target database", callback(res));
     /*With create target*/
-    couchlib.replicate("exampledb1", "exampledb2", true, callback);
+    couchlib.replicate("source database", "target database", true, callback(res));
     ```
+    
+5. Design methods, current design methods available. Note that loading design schemas from files isn't yet available, but in the works. All responses are parsed JSON:
+    * To create a new design document:
+    ```javascript
+    couchlib.design.create("database", "design name", {/*Design Schema*/}, callback(res));
+    ```
+
+    * To update a design doc (Overwrites the current design doc):
+    ```javascript
+    /*You can provide a _rev number in the design schema if you want, if not it will grab the latest and overwrite it*/
+    couchlib.design.update("database", "design name", {/*Design Schema*/}, callback(res));
+    ```
+    
+    * To get a design doc
+    ```javascript
+    couchlib.design.get("database", "design name", callback(res));
+    ```
+    
+    * To get a design doc's info
+    ```javascript
+    couchlib.design.info("database", "design name", callback(res));
+    ```
+    
+    * To copy a design doc
+    ```javascript
+    couchlib.design.copy("database", "design name", "destination design name", callback(res));
+    ```
+    
+6. View methods, this will be moved into the Design methods eventually to stay closer to the couchdb api:
+    * To run a view:
+    ```javascript
+    couchlib.view.get("database", "design name", "view name", callback(res));
+    ```
+
+
 And that's all at the moment, I'll be changing things considerably the more I go along.
