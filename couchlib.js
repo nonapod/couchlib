@@ -196,32 +196,6 @@ module.exports = function couchlib(options) {
     this.run({"path": path, "data": data, "method": "DELETE"}, callback);
   };
 
-  /* create
-   * @params - string, callback
-   * @returns - runs callback
-   * @description - create a new database
-   */
-  this.create = function(dbname, callback) {
-    this.run({"path": dbname, "method" :"PUT"}, function(response){
-      response = JSON.parse(response);
-      if(callback) callback(response);
-      else console.log(response);
-    });
-  };
-
-  /* destroy
-   * @params - string, callback
-   * @returns - runs callback
-   * @description - remove a database
-   */
-  this.destroy = function(dbname, callback) {
-    this.run({"path": dbname, "method" :"DELETE"}, function(response){
-      response = JSON.parse(response);
-      if(callback) callback(response);
-      else console.log(response);
-    });
-  };
-
   /* version
    * @params - callback
    * @returns - runs callback
@@ -242,87 +216,127 @@ module.exports = function couchlib(options) {
     });
   };
 
-  /* databases
-   * @params - callback
-   * @returns - runs callback
-   * @description - list all databases
+  /* documents
+   * @description - holds the methods listed under documents in the api,
+   *                i.e. doc, attachment
    */
-  this.databases = function(callback) {
-    this.get("_all_dbs", function(response) {
-      response = JSON.parse(response);
-      if(callback) callback(response);
-      else console.log(response);
-    });
-  };
 
-  /* uuid
-   * @params - integer, callback
-   * @returns - runs callback
-   * @description - gets specified amount of uuids from the server
-   */
-  this.uuid = function(count, callback) {
-    var data = {"count": count};
-    this.get("_uuids", data, function(response){
-      response = JSON.parse(response);
-      if(callback)callback(response);
-      else console.log(response);
-    });
-  };
+  this.documents = {
+    /* document
+     * @params - string, object, callback
+     * @returns - runs callback
+     * @description - creates a new document, needs a database name, an object schema and a callback
+     */
+    create : function(database, schema, callback) {
+      self.server.uuid(1, function(result){
+        var uuid;
+        var path;
 
-  /* document
-   * @params - string, object, callback
-   * @returns - runs callback
-   * @description - creates a new document, needs a database name, an object schema and a callback
-   */
-  this.document = function(database, schema, callback) {
-    var couchlib = this;
-    this.uuid(1, function(result){
-      var uuid;
-      var path;
-
-      if(result.uuids) {
-        /* Override uuid with schema id if we provided one */
-        uuid = schema._id || result.uuids[0];
-        path = database + "/" + uuid;
-        couchlib.put(path, schema, function(response){
-          response = JSON.parse(response);
-          if(callback) callback(response);
-          else console.log(response);
-        });
-      }
-      else{
-        if(callback) callback(result);
-        else console.log(result)
-      }
-    });
-  };
-
-  /* attachment
-   * @params - @TODO
-   * @returns - runs callback
-   * @description - add an attachment
-   */
-  this.attachment = function() {
+        if(result.uuids) {
+          /* Override uuid with schema id if we provided one */
+          uuid = schema._id || result.uuids[0];
+          path = database + "/" + uuid;
+          self.put(path, schema, function(response){
+            response = JSON.parse(response);
+            if(callback) callback(response);
+            else console.log(response);
+          });
+        }
+        else{
+          if(callback) callback(result);
+          else console.log(result)
+        }
+      });
+    },
+    /* attachment
+     * @params - @TODO
+     * @returns - runs callback
+     * @description - add an attachment
+     */
+    attachment : function() {
     //@TODO
+    }
   };
 
-  /* replicate
-   * @params - string, string, [boolean], callback
-   * @returns - runs callback
-   * @description - Replicate a database, take a source, target, optional create_target flag and callback
+  /* databases
+   * @description - holds the methods listed under databases in the api,
+   *                i.e. create, destroy, alldocs etc
    */
-  this.replicate = function(source, target, /*[create_target]*/callback) {
-    var create_target = false;
-    var data;
-    if(arguments.length == 4) {
-      create_target = true;
-      callback = arguments[3];
+  this.databases = {
+    /* create
+     * @params - string, callback
+     * @returns - runs callback
+     * @description - create a new database
+     */
+    create : function(dbname, callback) {
+      self.run({"path": dbname, "method" :"PUT"}, function(response){
+        response = JSON.parse(response);
+        if(callback) callback(response);
+        else console.log(response);
+      });
+    },
+    /* destroy
+     * @params - string, callback
+     * @returns - runs callback
+     * @description - remove a database
+     */
+    destroy : function(dbname, callback) {
+      self.del(dbname, {}, function(response){
+        response = JSON.parse(response);
+        if(callback) callback(response);
+        else console.log(response);
+      });
     }
-    data = {"source": source, "target": target, "create_target": create_target};
-    this.post("_replicate", data, function(response){
-      response = JSON.parse(response);
-      callback(response);
-    });
+  };
+
+  /* server
+   * @description - holds the methods listed under server in the api,
+   *                i.e. replication, log, databases etc
+   */
+  this.server = {
+    /* replicate
+     * @params - string, string, [boolean], callback
+     * @returns - runs callback
+     * @description - Replicate a database, take a source, target, optional create_target flag and callback
+     */
+    replicate: function(source, target, /*[create_target]*/callback) {
+      var create_target = false;
+      var data;
+      if(arguments.length == 4) {
+        create_target = true;
+        callback = arguments[3];
+      }
+      data = {"source": source, "target": target, "create_target": create_target};
+      self.post("_replicate", data, function(response){
+        response = JSON.parse(response);
+        callback(response);
+      });
+    },
+    /* uuid
+     * @params - integer, callback
+     * @returns - runs callback
+     * @description - gets specified amount of uuids from the server
+     */
+    uuid : function(count, callback) {
+      var data = {"count": count};
+      self.get("_uuids", data, function(response){
+        response = JSON.parse(response);
+        if(callback)callback(response);
+        else console.log(response);
+      });
+    },
+    /* alldbs
+     * @params - callback
+     * @returns - runs callback
+     * @description - show all databases
+     */
+    alldbs : function(callback) {
+      self.get("_all_dbs", {}, function(response) {
+        response = JSON.parse(response);
+        if(callback) callback(response);
+        else console.log(response);
+      });
+    }
   };
 
   /* design
@@ -410,9 +424,7 @@ module.exports = function couchlib(options) {
   };
 
   /* view
-   * @params - none
-   * @returns - runs callback
-   * @description - holds functions within for creating, getting and deleting views
+   * @description - holds functions within for calling views
    * */
   this.view = {
     /* run

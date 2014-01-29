@@ -13,6 +13,7 @@ Object.prototype.typecheck = function() {
   return result;
 };
 
+/* Make it synchronous */
 
 describe('couchlib', function(){
 
@@ -28,29 +29,29 @@ describe('couchlib', function(){
     }); // End it
   }); // End .version()
 
-  /* couchlib.databases() */
-  describe('.databases()', function(){
+  /* couchlib.server.alldbs() */
+  describe('.server.alldbs()', function(){
     it('should return an array of databases', function(done){
-      couchlib.databases(function listDatabases(result) {
+      couchlib.server.alldbs(function listDatabases(result) {
         assert.equal('Array', result.typecheck());
         done();
       }); // End listDatabases
     }); // End it
-  }); // End .databases()
+  }); // End .server.alldbs()
 
-  /* couchlib.create() */
-  describe('.create() then .destroy()', function(){
+  /* couchlib.databases.create() */
+  describe('.databases.create() then .databases.destroy()', function(){
     it('should create a new database, try to duplicate and then destroy', function(done){
-      var id = ("test" + Math.floor((Math.random()*100)+(Math.random()*100)));
+      var id = "test" + Math.random().toString(36).substring(2);
       /* first create */
-      couchlib.create(id, function createFirst(response){
+      couchlib.databases.create(id, function createFirst(response){
         assert.equal(true, response.ok);
         /* try to create duplicate*/
-        couchlib.create(id, function createDuplicate(response){
+        couchlib.databases.create(id, function createDuplicate(response){
           /* should fail with file_exists */
           assert.equal('file_exists', response.error);
           /* destroy our original database */
-          couchlib.destroy(id, function destroyFirst(response){
+          couchlib.databases.destroy(id, function destroyFirst(response){
             /* should return {"ok": true} */
             assert.equal(true, response.ok);
             done();
@@ -58,34 +59,34 @@ describe('couchlib', function(){
         }); // End create duplicate
       }); // End createFirst
     }); // End it
-  }); // End .create()
+  }); // End .databases.create()
 
-  /* couchlib.destroy() */
-  describe(".destroy()", function(){
-    var id = ("test" + Math.floor((Math.random()*100)+(Math.random()*100)));
+  /* couchlib.databases.destroy() */
+  describe(".databases.destroy()", function(){
+    var id = "test" + Math.random().toString(36).substring(2);
     it('should try to destroy a non existent database and then return a "not_found" error ', function (done){
-      couchlib.destroy(id, function destroyNonExistent(response){
+      couchlib.databases.destroy(id, function destroyNonExistent(response){
         assert.equal("not_found", response.error);
         done();
       }); // End destroyNonExistent
     }); // End it
-  }); // End .destroy()
+  }); // End .databases.destroy()
 
-  /* couchlib.document() */
-  describe(".document()", function(){
-    var id = ("test" + Math.floor((Math.random()*100)+(Math.random()*100)));
+  /* couchlib.documents.create() */
+  describe(".documents.create()", function(){
+    var id = "test" + Math.random().toString(36).substring(2);
     var document = {"name": "test", "age": 1234, "loggedin": true};
     it('should create a new database, a new document, return ok, then destroy the database', function(done){
       /* create a random test database */
-      couchlib.create(id, function createDatabase(response){
+      couchlib.databases.create(id, function createDatabase(response){
         /* should return {"ok": true} */
         assert.equal(true, response.ok);
         /* create a new document */
-        couchlib.document(id, document, function createNewDocument(response){
+        couchlib.documents.create(id, document, function createNewDocument(response){
           /* should return {"ok": true} */
           assert.equal(true, response.ok);
           /* destroy the database */
-          couchlib.destroy(id, function destroyDatabase(response){
+          couchlib.databases.destroy(id, function destroyDatabase(response){
             /* should return {"ok": true} */
             assert.equal(true, response.ok);
             done();
@@ -95,30 +96,30 @@ describe('couchlib', function(){
     }); // End it
   }); // End .document()
 
-  /* couchlib.replicate() */
-  describe(".replicate() with create_target == true", function(){
-    var target = ("test" + Math.floor((Math.random()*100)+(Math.random()*100)));
-    var source = ("test" + Math.floor((Math.random()*200)+(Math.random()*200)));
+  /* couchlib.server.replicate() */
+  describe(".server.replicate() with create_target == true", function(){
+    var target = "test" + Math.random().toString(36).substring(2);
+    var source = "test" + Math.random().toString(36).substring(2);
     var document = {"name": "test", "age": 1234, "loggedin": true};
     it("should create a database, a document, replicate from target to source and return success, then destroy the databases", function(done){
       /* create the source */
-      couchlib.create(source, function createDatabase(response){
+      couchlib.databases.create(source, function createDatabase(response){
         /* should return {"ok": true} */
         assert.equal(true, response.ok);
         /* create a new document */
-        couchlib.document(source, document, function createNewDocument(response){
+        couchlib.documents.create(source, document, function createNewDocument(response){
           /* should return {"ok": true} */
           assert.equal(true, response.ok);
           /* Start Replicating */
-          couchlib.replicate(source, target, true, function startReplication(response){
+          couchlib.server.replicate(source, target, true, function startReplication(response){
             /* should return {"ok": true} */
             assert.equal(true, response.ok);
             /* destroy the source database */
-            couchlib.destroy(source, function destroySource(response){
+            couchlib.databases.destroy(source, function destroySource(response){
               /* should return {"ok": true} */
               assert.equal(true, response.ok);
               /* destroy the target database */
-              couchlib.destroy(target, function destroyTarget(response){
+              couchlib.databases.destroy(target, function destroyTarget(response){
                 /* should return {"ok": true} */
                 assert.equal(true, response.ok);
                 done();
@@ -128,12 +129,12 @@ describe('couchlib', function(){
         }); // End createNewDocument
       }); // End createDatabase
     }); // End it
-  }); // End .replicate()
+  }); // End .server.replicate()
 
   /* couchlib.design.create() */
   describe('.design.create()', function(){
-    var id = ("test" + Math.floor((Math.random()*100)+(Math.random()*100)));
-    var name = ("view" + Math.floor((Math.random()*100)+(Math.random()*100)));
+    var id = "test" + Math.random().toString(36).substring(2);
+    var name = "test" + Math.random().toString(36).substring(2);
     var design = {
       "views": {
         "testview": {
@@ -143,7 +144,7 @@ describe('couchlib', function(){
     };
     it('should create a database, create a design document, try to duplicate, fail, then destroy the database', function(done){
       /* create a new database */
-      couchlib.create(id, function createDatabase(response){
+      couchlib.databases.create(id, function createDatabase(response){
         /* should return {"ok": true} */
         assert.equal(true, response.ok);
         /* create the design */
@@ -154,7 +155,7 @@ describe('couchlib', function(){
           couchlib.design.create(id, name, design, function duplicateDesign(response){
             /* should return {"error": "conflict"} */
             assert.equal("conflict", response.error);
-            couchlib.destroy(id, function destroyDatabase(response){
+            couchlib.databases.destroy(id, function destroyDatabase(response){
               /* should return {"ok": true} */
               assert.equal(true, response.ok);
               done();
@@ -167,8 +168,8 @@ describe('couchlib', function(){
 
   /* couchlib.design.update() */
   describe('.design.update()', function(){
-    var id = ("test" + Math.floor((Math.random()*100)+(Math.random()*100)));
-    var name = ("view" + Math.floor((Math.random()*100)+(Math.random()*100)));
+    var id = "test" + Math.random().toString(36).substring(2);
+    var name = "test" + Math.random().toString(36).substring(2);
     var design = {
       "views": {
         "testview": {
@@ -178,7 +179,7 @@ describe('couchlib', function(){
     };
     it('should create a database, create a design document, try to update, then destroy the database', function(done){
       /* create a new database */
-      couchlib.create(id, function createDatabase(response){
+      couchlib.databases.create(id, function createDatabase(response){
         /* should return {"ok": true} */
         assert.equal(true, response.ok);
         /* create the design */
@@ -189,7 +190,7 @@ describe('couchlib', function(){
           couchlib.design.update(id, name, design, function updateDesign(response){
             /* should return {"ok": true} */
             assert.equal(true, response.ok);
-            couchlib.destroy(id, function destroyDatabase(response){
+            couchlib.databases.destroy(id, function destroyDatabase(response){
               /* should return {"ok": true} */
               assert.equal(true, response.ok);
               done();
@@ -202,8 +203,8 @@ describe('couchlib', function(){
 
   /* couchlib.design.get() */
   describe('.design.get()', function(){
-    var id = ("test" + Math.floor((Math.random()*100)+(Math.random()*100)));
-    var name = ("view" + Math.floor((Math.random()*100)+(Math.random()*100)));
+    var id = "test" + Math.random().toString(36).substring(2);
+    var name = "test" + Math.random().toString(36).substring(2);
     var design = {
       "views": {
         "testview": {
@@ -213,7 +214,7 @@ describe('couchlib', function(){
     };
     it('should create a database, create a design document, get it, then destroy the database', function(done){
       /* create a new database */
-      couchlib.create(id, function createDatabase(response){
+      couchlib.databases.create(id, function createDatabase(response){
         /* should return {"ok": true} */
         assert.equal(true, response.ok);
         /* create the design */
@@ -224,7 +225,7 @@ describe('couchlib', function(){
           couchlib.design.get(id, name, function getDesign(response){
             /* should return object containing new revision number */
             assert.equal(true, "_rev" in response);
-            couchlib.destroy(id, function destroyDatabase(response){
+            couchlib.databases.destroy(id, function destroyDatabase(response){
               /* should return {"ok": true} */
               assert.equal(true, response.ok);
               done();
@@ -237,8 +238,8 @@ describe('couchlib', function(){
 
   /* couchlib.design.info() */
   describe('.design.info()', function(){
-    var id = ("test" + Math.floor((Math.random()*100)+(Math.random()*100)));
-    var name = ("view" + Math.floor((Math.random()*100)+(Math.random()*100)));
+    var id = "test" + Math.random().toString(36).substring(2);
+    var name = "test" + Math.random().toString(36).substring(2);
     var design = {
       "views": {
         "testview": {
@@ -248,7 +249,7 @@ describe('couchlib', function(){
     };
     it('should create a database, create a design document, get the info, then destroy the database', function(done){
       /* create a new database */
-      couchlib.create(id, function createDatabase(response){
+      couchlib.databases.create(id, function createDatabase(response){
         /* should return {"ok": true} */
         assert.equal(true, response.ok);
         /* create the design */
@@ -259,7 +260,7 @@ describe('couchlib', function(){
           couchlib.design.info(id, name, function getDesignInfo(response){
             /* should return object containing a key/value pair identified by name */
             assert.equal(true, "name" in response);
-            couchlib.destroy(id, function destroyDatabase(response){
+            couchlib.databases.destroy(id, function destroyDatabase(response){
               /* should return {"ok": true} */
               assert.equal(true, response.ok);
               done();
@@ -272,9 +273,9 @@ describe('couchlib', function(){
 
   /* couchlib.design.copy() */
   describe('.design.copy()', function(){
-    var id = ("test" + Math.floor((Math.random()*1000)+(Math.random()*1000)));
-    var name = ("design" + Math.floor((Math.random()*1000)+(Math.random()*1000)));
-    var destination = ("destination" + Math.floor((Math.random()*1000)+(Math.random()*1000)));
+    var id = "test" + Math.random().toString(36).substring(2);
+    var name = "test" + Math.random().toString(36).substring(2);
+    var destination = "test" + Math.random().toString(36).substring(2);
     var design = {
       "views": {
         "testview": {
@@ -284,7 +285,7 @@ describe('couchlib', function(){
     };
     it('should create a database, create a design document, duplicate to a destination, then destroy the database', function(done){
       /* create a new database */
-      couchlib.create(id, function createDatabase(response){
+      couchlib.databases.create(id, function createDatabase(response){
         /* should return {"ok": true} */
         assert.equal(true, response.ok);
         /* create the design */
@@ -295,7 +296,7 @@ describe('couchlib', function(){
           couchlib.design.copy(id, name, destination, function copyDesign(response){
             /* should return {"ok": true} */
             assert.equal(true, response.ok);
-            couchlib.destroy(id, function destroyDatabase(response){
+            couchlib.databases.destroy(id, function destroyDatabase(response){
               /* should return {"ok": true} */
               assert.equal(true, response.ok);
               done();
@@ -308,8 +309,8 @@ describe('couchlib', function(){
 
   /* couchlib.view.get() */
   describe(".view.get()", function(){
-    var id = ("test" + Math.floor((Math.random()*100)+(Math.random()*100)));
-    var design_name = ("designname" + Math.floor((Math.random()*100)+(Math.random()*100)));
+    var id = "test" + Math.random().toString(36).substring(2);
+    var design_name = "test" + Math.random().toString(36).substring(2);
     var design = {
       "_id": "testing",
       "language": "javascript",
@@ -321,7 +322,7 @@ describe('couchlib', function(){
     };
     it("should create a new database, a design doc with a view, get the view, then delete the database", function(done){
       /* create the blank database */
-      couchlib.create(id, function createDatabase(response){
+      couchlib.databases.create(id, function createDatabase(response){
         /* should return {"ok": true} */
         assert.equal(true, response.ok);
         /* Create design document */
@@ -331,7 +332,7 @@ describe('couchlib', function(){
           couchlib.view.get(id, design_name, "testview", function getView(response){
             /* should return {"ok": true} */
             assert.equal(true, "total_rows" in response);
-            couchlib.destroy(id, function destroyDatabase(response){
+            couchlib.databases.destroy(id, function destroyDatabase(response){
               /* should return {"ok": true} */
               assert.equal(true, response.ok);
               done();
