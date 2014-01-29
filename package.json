@@ -5,7 +5,7 @@
     "author": "Leslie Alexander Cordell <silvatici1066@gmail.com",
     "description": "A CouchDB connector using nodes native http request",
     "scripts": {
-        "test": "tests.js"
+        "test": "make test"
     },
     "main": "./couchlib.js",
     "repository": {
