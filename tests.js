@@ -17,7 +17,7 @@ Object.prototype.typecheck = function() {
 
 describe('couchlib', function(){
 
-  couchlib = new couchlib({"user": "admin", "password": "7oZu37d0CEt$"});
+  couchlib = new couchlib();
 
   /* couchlib.version() */
   describe('.version()', function(){
