@@ -1,6 +1,6 @@
 couchlib
 ========
-
+[![Build Status](https://travis-ci.org/nonapod/couchlib.png?branch=master)](https://travis-ci.org/nonapod/couchlib)
 A couchdb interface for nodejs using the http module.
 
 **This library is starting to take better shape, although it's still a few days in its infancy, things are starting to lay out much nicer. Originally I was planning to make a couchdb connector for a new site/app that I'm making, however now I'm enjoying it so much I'm going to try to implement the entire couch http api here, and then make a sails.js connector, just because.**
