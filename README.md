@@ -79,7 +79,7 @@ couchlib.del("path", /*[optional data]*/, callback(res));
 couchlib.copy("path", "destination", callback(res));
 ```
 
-##Databases - 
+##Databases
 ###couchlib.databases
 Databases reflects the methods available in the databases segment of the native couchdb api i.e. purge, creating them, deleting tem etc. *All callback responses are parsed JSON*
 ###couchlib.databases.create(database_name, callback(response))
@@ -94,7 +94,7 @@ couchlib.databases.create("database name", callback(res));
 couchlib.databases.destroy("database name", callback(res));
 ```
 
-##Server - 
+##Server
 ###couchlib.server
 Server reflect the methods available in the server segment of the native couchdb api i.e. list databases, active tasks, replicate, restart etc
 
@@ -121,7 +121,7 @@ couchlib.server.replicate("source database", "target database", callback(res));
 couchlib.server.replicate("source database", "target database", true, callback(res));
 ```
 
-##Documents - 
+##Documents
 ###couchlib.documents
 Documents reflect the methods available in the documents segment of the native couchdb api i.e. creating/deleting documents and attachments
 ###couchlib.documents.create(database, document, callback(response))
@@ -131,7 +131,7 @@ Documents reflect the methods available in the documents segment of the native c
 couchlib.documents.create("exampledb", {/*Couch Document Goes Here*/}, callback(res));
 ```
     
-##Design - 
+##Design
 ###couchlib.design    
 Design reflect the methods available in the design segment of the native couchdb api i.e. creating/deleting design documents, show and list methods, views etc 
 ###couchlib.design.create(database, design_name, design_schema, callback(response))
@@ -158,7 +158,7 @@ couchlib.design.info("database", "design name", callback(response));
 couchlib.design.copy("database", "design name", "destination design name", callback(response));
 ```
 
-##View - 
+##View
 ###couchlib.view    
 I'm not sure whether or not to keep view separate from design, or to include it in design as that is where it sits in the native api. For now view functions are here
 
