@@ -24,7 +24,7 @@ describe('couchlib', function(){
     it('should return the version number', function(done){
       couchlib.version(function showVersion(result) {
         var validVersion = result.match(/\d+\.\d+\.\d+/i)
-        assert.equal(true, validVersion);
+        assert.equal("Array", validVersion.typecheck());
         done();
       }); // End showVersion
     }); // End it
