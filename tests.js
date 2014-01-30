@@ -23,7 +23,8 @@ describe('couchlib', function(){
   describe('.version()', function(){
     it('should return the version number', function(done){
       couchlib.version(function showVersion(result) {
-        assert.equal(result.match(/\d+\.\d+\.\d+/i), true);
+        var validVersion = result.match(/\d+\.\d+\.\d+/i)
+        assert.equal(true, validVersion);
         done();
       }); // End showVersion
     }); // End it
