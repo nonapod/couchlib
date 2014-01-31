@@ -13,6 +13,7 @@ The aim of this project is to create a base api that reflects the couchdb native
     ```javascript
     var couchlib = require('./couchlib.js');
     ```
+
 2. Create a new instance and pass in information
     ```javascript
     /* host defaults to localhost, port defaults to 5984 */
@@ -22,6 +23,7 @@ The aim of this project is to create a base api that reflects the couchdb native
       "user": "admin", 
       "password": "password"});
     ```
+
 3. The run function is couchlib's base request function, all other method functions rely on this, this is useful for customized queries
     ```javascript
     /* Options Example */
