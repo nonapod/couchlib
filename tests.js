@@ -23,7 +23,7 @@ describe('couchlib', function(){
   describe('.version()', function(){
     it('should return the version number', function(done){
       couchlib.version(function showVersion(result) {
-        var validVersion = result.match(/\d+\.\d+\.\d+/i)
+        var validVersion = result.match(/\d+\.\d+\.\d+/i);
         assert.equal("Array", validVersion.typecheck());
         done();
       }); // End showVersion
@@ -143,27 +143,32 @@ describe('couchlib', function(){
         }
       }
     };
-    it('should create a database, create a design document, try to duplicate, fail, then destroy the database', function(done){
-      /* create a new database */
-      couchlib.databases.create(id, function createDatabase(response){
-        /* should return {"ok": true} */
-        assert.equal(true, response.ok);
-        /* create the design */
-        couchlib.design.create(id, name, design, function createDesign(response){
+    it('should check database exists, create it, create a design document, try to duplicate, fail, then destroy the database', function(done){
+      couchlib.databases.exists(id, function checkExists(response){
+        /* database should not exists */
+        assert.equal(false, response);
+        /* create a new database */
+        couchlib.databases.create(id, function createDatabase(response){
           /* should return {"ok": true} */
           assert.equal(true, response.ok);
-          /* Try to duplicate, should return Document update conflict */
-          couchlib.design.create(id, name, design, function duplicateDesign(response){
-            /* should return {"error": "conflict"} */
-            assert.equal("conflict", response.error);
-            couchlib.databases.destroy(id, function destroyDatabase(response){
-              /* should return {"ok": true} */
-              assert.equal(true, response.ok);
-              done();
-            }); // End destroyDatabase
-          }); // End duplicateDesign
-        }); // End createDesign
-      }); // End createDatabase
+          /* create the design */
+          couchlib.design.create(id, name, design, function createDesign(response){
+            /* should return {"ok": true} */
+            assert.equal(true, response.ok);
+            /* Try to duplicate, should return Document update conflict */
+            couchlib.design.create(id, name, design, function duplicateDesign(response){
+              /* should return {"error": "conflict"} */
+              assert.equal("conflict", response.error);
+              couchlib.databases.destroy(id, function destroyDatabase(response){
+                /* should return {"ok": true} */
+                assert.equal(true, response.ok);
+                done();
+              }); // End destroyDatabase
+            }); // End duplicateDesign
+          }); // End createDesign
+        }); // End createDatabase
+      }); // End checkExists
+
     }); // End it
   }); // End .design.create()
 

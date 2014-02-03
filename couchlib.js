@@ -286,8 +286,26 @@ module.exports = function couchlib(options) {
         if(callback) callback(response);
         else console.log(response);
       });
+    },
+    /* exists
+     * @params - string, callback
+     * @returns - runs callback, returns true if exists, false if not
+     * @description - check to see if a database exists
+     * */
+    exists : function(dbname, callback) {
+      self.get(dbname, {}, function(response){
+        var result = false;
+        var error = JSON.parse(response).error;
+        if(error == 'file_exists') result = true;
+        if(callback){
+          callback(result);
+        }
+        else{
+          console.log(result);
+        }
+      });
     }
-  };
+   };
 
   /* server
    * @description - holds the methods listed under server in the api,
