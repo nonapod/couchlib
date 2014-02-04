@@ -294,9 +294,11 @@ module.exports = function couchlib(options) {
      * */
     exists : function(dbname, callback) {
       self.get(dbname, {}, function(response){
-        var result = false;
+        var result;
         var error = JSON.parse(response).error;
-        if(error == 'file_exists') result = true;
+        var exists = JSON.parse(response).db_name;
+        if(error) result = false;
+        else if (exists) result = true;
         if(callback){
           callback(result);
         }
