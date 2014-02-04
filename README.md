@@ -84,6 +84,13 @@ couchlib.copy("path", "destination", callback(res));
 ##Databases
 ###couchlib.databases
 Databases reflects the methods available in the databases segment of the native couchdb api i.e. purge, creating them, deleting tem etc. *All callback responses are parsed JSON*
+###couchlib.databases.exists(database_name, callback(response))
+* To check if a database **exists**:
+```javascript
+/*Will return true if it exists, false if it doesn't*/
+couchlib.databases.exists("database name", callback(res));
+```
+
 ###couchlib.databases.create(database_name, callback(response))
 * To **create** a database:
 ```javascript
