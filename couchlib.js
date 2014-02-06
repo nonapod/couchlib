@@ -71,8 +71,8 @@ module.exports = function couchlib(options) {
 
     /* If we have any data, JSON stringify it */
     if(options.data) {
-      /* Get methods use a query string rather than passing data */
-      if(options.method == GET) {
+      /* Get and delete methods use a query string rather than passing data */
+      if(options.method == GET || options.method == DELETE) {
         dataquery = querystring.stringify(options.data);
         /* If we get a valid data querystring, append it to the path along with a ? */
         if(dataquery.length) options.path = options.path + "?" + querystring.stringify(options.data);
@@ -111,7 +111,7 @@ module.exports = function couchlib(options) {
 
     /* Callback for error handling; pass it to a callback or log it to the console */
     function onError(error) {
-      error = {"Error": error};
+      error = JSON.stringify({"Error": error});
       if(callback) callback(error);
       else console.log(error);
     }
@@ -121,14 +121,14 @@ module.exports = function couchlib(options) {
     /* Go ahead and run our request */
     request = http.request(options, onRequest);
     /* If we have data, and we're not running a get request, write it to the request it */
-    if(options.method != GET && options.data) request.write(options.data);
+    if(options.method != GET && options.method != DELETE && options.data) request.write(options.data);
     request.on(ERROR, onError);
     request.end();
   }; // End run
 
   /* get
   * @params - string, [object], callback
-  * @returns - runs callback
+  * @returns - sends parsed JSON to callback
   * @description - Run a get request, take optional data object as 2nd parameter
   *                run a callback to handle request response data. Uses run function.
   */
@@ -143,7 +143,7 @@ module.exports = function couchlib(options) {
 
   /* copy
    * @params - string, string, callback
-   * @returns - runs callback
+   * @returns - sends parsed JSON to callback
    * @description - Run a copy request, requires a path, destination name, data and callback
    */
   this.copy = function(path, destination, callback) {
@@ -167,7 +167,7 @@ module.exports = function couchlib(options) {
 
   /* post
    * @params - string, [object], callback
-   * @returns - runs callback
+   * @returns - sends parsed JSON to callback
    * @description - Run a post request, take optional data object as 2nd parameter
    *                run a callback to handle request response data. Uses run function.
    */
@@ -182,7 +182,7 @@ module.exports = function couchlib(options) {
 
   /* del
    * @params - string, [object], callback
-   * @returns - runs callback
+   * @returns - sends parsed JSON to callback
    * @description - Run a delete request, take optional data object as 2nd parameter
    *                run a callback to handle request response data. Uses run function.
    */
@@ -198,7 +198,7 @@ module.exports = function couchlib(options) {
 
   /* version
    * @params - callback
-   * @returns - runs callback
+   * @returns - sends parsed JSON to callback
    * @description - get the couchdb version number
    */
   this.version = function(callback) {
@@ -222,12 +222,18 @@ module.exports = function couchlib(options) {
    */
 
   this.documents = {
-    /* document
+    /* create
      * @params - string, object, callback
-     * @returns - runs callback
-     * @description - creates a new document, needs a database name, an object schema and a callback
+     * @returns - sends parsed JSON to callback
+     * @description - creates a new document, needs a database name,
+     *                an object schema and a callback. Do not
+     *                use this to create many documents, as this
+     *                only works with around 100 or so requests this
+     *                way. Use documents.many.create() instead.
      */
     create : function(database, schema, callback) {
+      /* If no schema provided, create a new blank record */
+      schema = schema || {};
       self.server.uuid(1, function(result){
         var uuid;
         var path;
@@ -248,14 +254,157 @@ module.exports = function couchlib(options) {
         }
       });
     },
+    /* get
+     * @params - string, string, callback
+     * @returns - sends parsed JSON to callback
+     * @description - gets a document from the database
+     */
+    get : function(database, id, callback){
+      var path = database + "/" + id;
+      self.get(path, {}, function(response){
+        response = JSON.parse(response);
+        if(callback) callback(response);
+        else console.log(response);
+      });
+    },
+    /* remove
+     * @params - string, string, callback
+     * @returns - sends parsed JSON to callback
+     * @description - attached the _deleted true flag, keeps the document
+     *                around for replication concurrency, recommended way.
+     *                Do not use this for bulk requests via loops, only
+     *                works with around 100 requests this way, use removemany
+     *                instead.
+     */
+    remove : function(database, id, callback){
+      self.documents.get(database, id, function ifExists(response){
+        var rev = response._rev;
+        if(rev) {
+          self.documents.create(database, {"_id": id ,"_rev": rev, "_deleted": true}, function(response){
+            if(callback) callback(response);
+            else console.log(response);
+          });
+        }
+        else{
+          if(callback) callback(response);
+          else console.log(response);
+        }
+      });
+    },
+    /* destroy
+     * @params - string, string, callback
+     * @returns - sends parsed JSON to callback
+     * @description - deletes a document completely, leaving only
+     *                rev and id. Do not loop to delete many with
+     *                this method, use removemany method instead.
+     */
+    destroy : function(database, id, callback){
+      var path = database + "/" + id;
+      self.get(path, {}, function ifExists(response){
+        response = JSON.parse(response);
+        var rev = response._rev;
+        if(rev) {
+          self.del(path, {"rev": rev}, function(response){
+            response = JSON.parse(response);
+            if(callback) callback(response);
+            else console.log(response);
+          });
+        }
+        else{
+          if(callback) callback(response);
+          else console.log(response);
+        }
+      });
+    },
+    /* many
+     * @description - holds functions for bulk create,
+     *                functions. Although this sits
+     *                in the database segment of the
+     *                api, it fits more nicely in the
+     *                documents segment
+     */
+    many : {
+      /* create
+       * @params - string, array, callback
+       * @returns - sends parsed JSON to callback
+       * @description - bulk create documents by passing in
+       *                an array containing many document objects
+       */
+      create : function(dbname, docs, callback) {
+        var path = dbname + "/_bulk_docs";
+        docs = {"docs": docs};
+        self.post(path, docs, function(response){
+          response = JSON.parse(response);
+          if(callback) callback(response);
+          else console.log(response);
+        });
+      },
+      /* remove
+       * @params - string, array, callback
+       * @returns - sends parsed JSON to callback
+       * @description - bulk remove documents by passing in
+       *                an array of ids
+       */
+      remove : function(dbname, ids, callback) {
+        var FINISHED = 'finished';
+        var path = dbname + '/_bulk_docs';
+        var emitter = new(require('events')).EventEmitter();
+        var docs = [];
+
+        emitter.on(FINISHED, function(docs){
+          docs = {"docs": docs};
+          self.post(path, docs, function(response){
+            response = JSON.parse(response);
+            if(callback) callback(response);
+            else console.log(response);
+          });
+        });
+
+        self.documents.many.get(dbname, ids, function(response){
+          if(response.rows) {
+            for(var i = 0, rows = response.rows.length; i < rows; i++) {
+              (function toRemove(i){
+                if(response.rows[i].id && response.rows[i].value.rev) {
+                  docs.push({"_id": response.rows[i].id, "_rev": response.rows[i].value.rev, "_deleted": true});
+                }
+                if(i == response.rows.length - 1) emitter.emit(FINISHED, docs);
+              })(i);
+            }
+          }
+        });
+      },
+      /* get
+       * @params - string, [array], callback
+       * @returns - sends parsed JSON to callback
+       * @description - Gets some or all the documents
+       *                in a database, if an array of
+       *                keys as an optional parameter
+       *                is passed, only those documents
+       *                are fetched.
+       */
+       get : function(dbname, /*keys,*/ callback) {
+         var path = dbname + "/_all_docs";
+         var keys = {};
+
+         if(arguments.length == 3 || typeof arguments[1] == 'object' ) {
+           keys = {"keys": arguments[1]};
+           callback = arguments[2];
+         }
+         self.post(path, keys, function(response){
+           response = JSON.parse(response);
+           if(callback) callback(response);
+           else console.log(response);
+         });
+       }
+    }
     /* attachment
      * @params - @TODO
-     * @returns - runs callback
+     * @returns - sends parsed JSON to callback
      * @description - add an attachment
-     */
+
     attachment : function() {
     //@TODO
-    }
+    }*/
   };
 
   /* databases
@@ -265,7 +414,7 @@ module.exports = function couchlib(options) {
   this.databases = {
     /* create
      * @params - string, callback
-     * @returns - runs callback
+     * @returns - sends parsed JSON to callback
      * @description - create a new database
      */
     create : function(dbname, callback) {
@@ -277,7 +426,7 @@ module.exports = function couchlib(options) {
     },
     /* destroy
      * @params - string, callback
-     * @returns - runs callback
+     * @returns - sends parsed JSON to callback
      * @description - remove a database
      */
     destroy : function(dbname, callback) {
@@ -289,7 +438,7 @@ module.exports = function couchlib(options) {
     },
     /* exists
      * @params - string, callback
-     * @returns - runs callback, returns true if exists, false if not
+     * @returns - sends true or false to callback
      * @description - check to see if a database exists
      * */
     exists : function(dbname, callback) {
@@ -316,7 +465,7 @@ module.exports = function couchlib(options) {
   this.server = {
     /* replicate
      * @params - string, string, [boolean], callback
-     * @returns - runs callback
+     * @returns - sends parsed JSON to callback
      * @description - Replicate a database, take a source, target, optional create_target flag and callback
      */
     replicate: function(source, target, /*[create_target]*/callback) {
@@ -334,7 +483,7 @@ module.exports = function couchlib(options) {
     },
     /* uuid
      * @params - integer, callback
-     * @returns - runs callback
+     * @returns - Sends parsed JSON to callback
      * @description - gets specified amount of uuids from the server
      */
     uuid : function(count, callback) {
@@ -347,7 +496,7 @@ module.exports = function couchlib(options) {
     },
     /* alldbs
      * @params - callback
-     * @returns - runs callback
+     * @returns - sends parsed JSON to callback
      * @description - show all databases
      */
     alldbs : function(callback) {
@@ -366,7 +515,7 @@ module.exports = function couchlib(options) {
   this.design = {
     /* create
     *  @params - string, string, object, callback
-    *  @returns - runs callback
+    *  @returns - sends parsed JSON to callback
     *  @description - create a new design document
     * */
     create : function createDesign(database, name, data, callback) {
@@ -380,7 +529,7 @@ module.exports = function couchlib(options) {
 
     /* update
      * @params - string, string, object, callback
-     * @returns - runs callback
+     * @returns - sends parsed JSON to callback
      * @description - overwrites a design document, if no revision number is provided, the latest is taken
      * */
     update : function updateDesign(database, name, data, callback) {
@@ -403,7 +552,7 @@ module.exports = function couchlib(options) {
     },
     /* get
      * @params - string, string, callback
-     * @returns - runs callback
+     * @returns - sends parsed JSON to callback
      * @description - get a design document
      */
     get : function getDesign(database, name, callback) {
@@ -416,7 +565,7 @@ module.exports = function couchlib(options) {
     },
     /* info
      * @params - string, string, callback
-     * @returns - runs callback
+     * @returns - sends parsed JSON to callback
      * @description - get a design document info
      */
     info : function infoDesign(database, name, callback) {
@@ -429,7 +578,7 @@ module.exports = function couchlib(options) {
     },
     /* copy
      * @params - string, string, string, callback
-     * @returns - runs callback
+     * @returns - sends parsed JSON to callback
      * @description - copy a design document to a provided destination name
      */
     copy : function copyDesign(database, name, destination, callback) {
@@ -449,7 +598,7 @@ module.exports = function couchlib(options) {
   this.view = {
     /* run
      * @params - string, string, object, callback
-     * @returns - runs callback
+     * @returns - sends parsed JSON to callback
      * @description - runs a post on the view, can take in keys for data
      * */
     run : function runView(database, view, data, callback) {
@@ -462,7 +611,7 @@ module.exports = function couchlib(options) {
     },
     /* get
      * @params - string, string, object, callback
-     * @returns - runs callback
+     * @returns - sends parsed JSON to callback
      * @description - runs a get on the view
     * */
     get : function getView(database, design, view, callback) {

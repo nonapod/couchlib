@@ -4,6 +4,8 @@
  */
 var couchlib = require('./couchlib');
 var assert = require('assert');
+var events = require('events');
+var emitter = new events.EventEmitter();
 
 /* Quick typecheck function */
 Object.prototype.typecheck = function() {
@@ -95,7 +97,125 @@ describe('couchlib', function(){
         }); // End createNewDocument
       }); // End createDatabase
     }); // End it
-  }); // End .document()
+  }); // End .documents.create()
+
+  /* couchlib.documents.destroy() */
+  describe(".documents.destroy()", function(){
+    it('should create a database, create 3 documents, destroy them, and then delete the database.', function(done){
+      var COMPLETED = 0;
+      var COUNT = 3;
+      var INSERTED = 'inserted';
+      var DELETED = 'deleted';
+      var DESTROYED = 0;
+      var DOCS = [];
+      var DBNAME = "test" + Math.random().toString(36).substring(2);
+      /* Whenever a document is created, increment the inserted variable*/
+      emitter.on(INSERTED, function(docid){
+        COMPLETED ++;
+        DOCS.push(docid);
+        if(COMPLETED == COUNT) {
+          destroyDocuments(DOCS);
+        }
+      });
+      /* Whenever a document is deleted, increment the deleted variable */
+      emitter.on(DELETED, function(){
+        DESTROYED++;
+        if(DESTROYED == COUNT) {
+          destroyDatabase(DBNAME);
+        }
+      });
+
+      /* create a random test database */
+      couchlib.databases.create(DBNAME, function createDatabase(response){
+        var document = {"name": "test", "age": 1234, "loggedin": true};
+        /* should return {"ok": true} */
+        assert.equal(true, response.ok);
+        /* Look 100 times and create our documents */
+        for(var i = 0; i <= COUNT; i++) {
+          couchlib.documents.create(DBNAME, document, function createDocument(response){
+            /* should return {"ok": true} */
+            assert.equal(true, response.ok);
+            /* should also return an id number */
+            assert.equal(true, "id" in response);
+            emitter.emit(INSERTED, response.id);
+          }); // End .documents.create
+        } // End for
+      }); // End createDatabase
+
+      /* destroy all the documents */
+      function destroyDocuments(docs) {
+        for(var i = 0, doc; doc = docs[i], i < docs.length; i++) {
+          (function destroyDocument(doc){
+            couchlib.documents.remove(DBNAME, doc, function(response){
+              /* should return {"ok": true} */
+              assert.equal(true, response.ok);
+              emitter.emit(DELETED);
+            }); // End .documents.destroy()
+          })(doc);
+        } // End for
+      } // End destroyDocuments
+
+      /* destroy the database */
+      function destroyDatabase(DBNAME){
+        couchlib.databases.destroy(DBNAME, function destroyDatabase(response){
+          /* should return {"ok": true} */
+          assert.equal(true, response.ok);
+          done();
+        }); // End .databases.destroy
+      } // End destroyDatabase
+
+    }); // End it
+  }); // End .documents.destroy()
+
+  /* couchlib.documents.many.create() */
+  describe(".documents.many.create() use all .many function to create many documents and delete them", function(){
+    it("should create a database, create many documents, get them all, delete them all then delete the database", function(done){
+      var COUNT = 10000;
+      var COMPLETE = 'completed';
+      var READY = 'ready';
+      var id = "test" + Math.random().toString(36).substring(2);
+      var docs = [];
+      var removedocs = [];
+      this.timeout(100000);
+      /* Once we've prepared our delete, delete the docs, then the database */
+      emitter.on(READY, function(docs){
+        couchlib.documents.many.remove(id, docs, function removeMany(response){
+          /* Response should be a length greater than 0 */
+          assert.equal(true, response.length > 0);
+          couchlib.databases.destroy(id, function destroyDatabase(response){
+            /* should return {"ok": true} */
+            assert.equal(true, response.ok);
+            done();
+          }); // end destroyDatabase
+        }); // end removeMany
+      }); // End READY
+      /* Once we have created docs, prepare to delete them */
+      emitter.on(COMPLETE, function prepareDelete(docs){
+        for(var i = 0; i < docs.length; i++) {
+          (function(i){
+            if(docs[i]["id"]) {
+              removedocs.push(docs[i]["id"])
+            }
+            if(i == docs.length - 1) {
+              emitter.emit(READY, removedocs);
+            }
+          })(i);
+        }
+      }); // end prepareDelete
+      couchlib.databases.create(id, function createDatabase(response){
+        /* should return {"ok": true} */
+        assert.equal(true, response.ok);
+        /* Create many documents */
+        for(var i = 0; i < COUNT; i++){
+          docs.push({"name": "test", "age": 111});
+        }
+        couchlib.documents.many.create(id, docs, function createMany(response){
+          assert.equal(true, response.length > 0);
+          emitter.emit(COMPLETE, response);
+        }); // end createMany
+      }); // end createDatabase
+    }); // end it
+  }); // end documents.many.create()
 
   /* couchlib.server.replicate() */
   describe(".server.replicate() with create_target == true", function(){
@@ -348,6 +468,7 @@ describe('couchlib', function(){
       }); // End createDatabase
     }); // End it
   }); // End describe
+
 
 
 
