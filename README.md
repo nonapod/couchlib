@@ -3,7 +3,7 @@ couchlib
 [![Build Status](https://travis-ci.org/nonapod/couchlib.png?branch=master)](https://travis-ci.org/nonapod/couchlib)
 A couchdb interface for nodejs using the http module.
 ###Project Goals
-The aim of this project is to create a base api that reflects the couchdb native http api as closely as possible, in a way that makes it intuitive for couch users. Any further functionality should be extended. 
+The aim of this project is to create a base api that reflects the couchdb native http api as closely as possible, in a way that makes it intuitive for couch users. 
 
 **Note This library is very new in development with lots of contunual changes, not everything is yet implemented.**
 
@@ -13,7 +13,6 @@ The aim of this project is to create a base api that reflects the couchdb native
     ```javascript
     var couchlib = require('./couchlib.js');
     ```
-
 2. Create a new instance and pass in information
     ```javascript
     /* host defaults to localhost, port defaults to 5984 */
@@ -23,7 +22,6 @@ The aim of this project is to create a base api that reflects the couchdb native
       "user": "admin", 
       "password": "password"});
     ```
-
 3. The run function is couchlib's base request function, all other method functions rely on this, this is useful for customized queries
     ```javascript
     /* Options Example */
@@ -48,7 +46,7 @@ couchlib.version(callback(res));
 
 ##Requests
 The following are request methods that are used throughout couchlib, they use the run function to form the request and return a JSON response from couchdb.
-  * **It is possible to include an object named $headers in the data, headers will be extracted from this optional definition and not be passed with the data.**
+  * ####It is possible to include an object named $headers in the data, headers will be extracted from this optional definition and not be passed with the data.
 
 ###couchlib.get(path, [data], callback(response))
 * A **GET** request (optional data is converted to a querystring)
@@ -81,16 +79,9 @@ couchlib.del("path", /*[optional data]*/, callback(res));
 couchlib.copy("path", "destination", callback(res));
 ```
 
-##Databases
+##Databases - 
 ###couchlib.databases
 Databases reflects the methods available in the databases segment of the native couchdb api i.e. purge, creating them, deleting tem etc. *All callback responses are parsed JSON*
-###couchlib.databases.exists(database_name, callback(response))
-* To check if a database **exists**:
-```javascript
-/*Will return true if it exists, false if it doesn't*/
-couchlib.databases.exists("database name", callback(res));
-```
-
 ###couchlib.databases.create(database_name, callback(response))
 * To **create** a database:
 ```javascript
@@ -103,7 +94,7 @@ couchlib.databases.create("database name", callback(res));
 couchlib.databases.destroy("database name", callback(res));
 ```
 
-##Server
+##Server - 
 ###couchlib.server
 Server reflect the methods available in the server segment of the native couchdb api i.e. list databases, active tasks, replicate, restart etc
 
@@ -130,17 +121,39 @@ couchlib.server.replicate("source database", "target database", callback(res));
 couchlib.server.replicate("source database", "target database", true, callback(res));
 ```
 
-##Documents
+##Documents - 
 ###couchlib.documents
-Documents reflect the methods available in the documents segment of the native couchdb api i.e. creating/deleting documents and attachments
+Documents reflect the methods available in the documents segment of the native couchdb api i.e. creating/deleting documents and attachments. These methods should not be looped to manipulate multiple documents, instead use the documents.many methods for bulk functionality.
 ###couchlib.documents.create(database, document, callback(response))
 * To create a document:
 ```javascript
 /*Pass in a database name, a document object and a callback*/
 couchlib.documents.create("exampledb", {/*Couch Document Goes Here*/}, callback(res));
 ```
-    
-##Design
+
+##Documents - Many 
+###couchlib.documents.many.create(database, documents, callback(response))
+* To create many documents; note that all documents to create should be stored in an array and passed to this function:
+```javascript
+/*Pass in a database name, an array of document objects, and a callback*/
+couchlib.documents.many.create("exampledb", [{ /* Document objects go in this array */ }], callback(res));
+```
+
+###couchlib.documents.many.remove(database, keys, callback(response))
+* To remove many documents:
+```javascript
+/*Pass in a database name, an array of document id strings, and a callback*/
+couchlib.documents.many.remove("exampledb", [ /* documents ids go in here as strings */], callback(res));
+```
+
+###couchlib.documents.many.get(database, [keys], callback(response))
+* To gets many or all documents:
+```javascript
+/*Pass in a database name, an optional array of document id strings, and a callback. If no keys are passed, all documents are returned for this database*/
+couchlib.documents.many.gets("exampledb", [ /* documents ids go in here as strings */], callback(res));
+```
+
+##Design - 
 ###couchlib.design    
 Design reflect the methods available in the design segment of the native couchdb api i.e. creating/deleting design documents, show and list methods, views etc 
 ###couchlib.design.create(database, design_name, design_schema, callback(response))
@@ -167,7 +180,7 @@ couchlib.design.info("database", "design name", callback(response));
 couchlib.design.copy("database", "design name", "destination design name", callback(response));
 ```
 
-##View
+##View - 
 ###couchlib.view    
 I'm not sure whether or not to keep view separate from design, or to include it in design as that is where it sits in the native api. For now view functions are here
 
