@@ -46,7 +46,7 @@ couchlib.version(callback(res));
 
 ##Requests
 The following are request methods that are used throughout couchlib, they use the run function to form the request and return a JSON response from couchdb.
-  * ####It is possible to include an object named $headers in the data, headers will be extracted from this optional definition and not be passed with the data.
+  * It is possible to include an object named $headers in the data, headers will be extracted from this optional definition and not be passed with the data.
 
 ###couchlib.get(path, [data], callback(response))
 * A **GET** request (optional data is converted to a querystring)
