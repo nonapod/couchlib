@@ -186,8 +186,8 @@ describe('couchlib', function(){
             /* should return {"ok": true} */
             assert.equal(true, response.ok);
             done();
-          }); // end destroyDatabase
-        }); // end removeMany
+          }); // End destroyDatabase
+        }); // End removeMany
       }); // End READY
       /* Once we have created docs, prepare to delete them */
       emitter.on(COMPLETE, function prepareDelete(docs){
@@ -201,7 +201,7 @@ describe('couchlib', function(){
             }
           })(i);
         }
-      }); // end prepareDelete
+      }); // End prepareDelete
       couchlib.databases.create(id, function createDatabase(response){
         /* should return {"ok": true} */
         assert.equal(true, response.ok);
@@ -212,10 +212,10 @@ describe('couchlib', function(){
         couchlib.documents.many.create(id, docs, function createMany(response){
           assert.equal(true, response.length > 0);
           emitter.emit(COMPLETE, response);
-        }); // end createMany
-      }); // end createDatabase
-    }); // end it
-  }); // end documents.many.create()
+        }); // End createMany
+      }); // End createDatabase
+    }); // End it
+  }); // End documents.many.create()
 
   /* couchlib.server.replicate() */
   describe(".server.replicate() with create_target == true", function(){
@@ -251,6 +251,27 @@ describe('couchlib', function(){
       }); // End createDatabase
     }); // End it
   }); // End .server.replicate()
+
+  /* couchlib.server.stats() */
+  describe('.server.stats()', function(){
+    it('should create a database, run a few stats queries and then delete itself', function(done){
+      var id = "test" + Math.random().toString(36).substring(2);
+      couchlib.databases.create(id, function createDatabase(response){
+        /* should return {"ok": true} */
+        assert.equal(true, response.ok);
+        /* See how many GET requests there have been */
+        couchlib.server.stats(id, "GET", function serverStats(response){
+          /* Should return an object with the GET requests in the database */
+          assert.equal(true, "GET" in response[id]);
+          couchlib.databases.destroy(id, function destroyDatabase(response){
+            /* should return {"ok": true} */
+            assert.equal(true, response.ok);
+            done();
+          }); // End destroyDatabase
+        }); // End serverStats
+      }); // End createDatabase
+    }); // End it
+  }); // End .server.stats()
 
   /* couchlib.design.create() */
   describe('.design.create()', function(){
@@ -469,7 +490,16 @@ describe('couchlib', function(){
     }); // End it
   }); // End describe
 
-
-
+  /* This test should remain at the end */
+  /* couchlib.server.restart() */
+  describe('.server.restart()', function(){
+    it('should restart the server', function(done) {
+      couchlib.server.restart(function restartServer(response){
+        /* should return {"ok": true} */
+        assert.equal(true, response.ok);
+        done();
+      }); // End restartServer
+    }); // End it
+  }); // End .server.restart()
 
 }); // End couchlib
