@@ -99,13 +99,29 @@ couchlib.databases.destroy("database name", callback(res));
 Server reflect the methods available in the server segment of the native couchdb api i.e. list databases, active tasks, replicate, restart etc
 
 ###couchlib.server.alldbs(callback(response))
-* To show a list of databases
+* To show a list of databases:
 ```javascript
 couchlib.server.alldbs(callback(res));
 ```
 
+###couchlib.server.stats([string, string], callback(response))
+* To get couchdb stats:
+```javascript
+/* This method can run any stat requests defined in the couchlib api http://docs.couchdb.org/en/latest/api/server/common.html#stats */
+/* To get a general overview, call with just a callback */
+couchlib.server.stats(callback(res));
+/* To get stats on one database, for instance stats on all GET requests */
+couchlib.server.stats("dbname", "GET", callback(res))
+```
+
+###couchlib.server.restart(callback(response))
+* To restart the couchdb server:
+```javascript
+couchlib.server.restart(callback(res));
+```
+
 ###couchlib.server.uuid(count, callback(response))
-* To get some uuids
+* To get some uuids:
 ```javascript
 /*Set the count to how many uuids you want*/
 var count = 1;
