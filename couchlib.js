@@ -481,9 +481,49 @@ module.exports = function couchlib(options) {
         callback(response);
       });
     },
+    /* stats
+     * @params - [string, string], callback
+     * @returns - sends parsed JSON to callback
+     * @descriptions - returns server stats, takes an optional
+     *                 query for a more defined search. The stat
+     *                 codes can be any provided in couchdb:
+     *                 http://docs.couchdb.org/en/latest/api/server/common.html#couchdb
+     */
+    stats : function(/*string, string*/callback) {
+      var path = "_stats";
+      var database;
+      var query;
+      if(arguments.length == 2) {
+        throw new Error("stats need two string; a database, and a query, and a callback. Or just a callback.");
+      }
+      else if(arguments.length = 3) {
+        database = arguments[0];
+        query = arguments[1];
+        path = path + "/" + database + "/" + query;
+        callback = arguments[2];
+      }
+      self.get(path, {}, function(response){
+        response = JSON.parse(response);
+        if(callback) callback(response);
+        else console.log(response);
+      });
+    },
+    /* restart
+     * @params - callback
+     * @returns - sends parsed JSON to callback
+     * @description - restarts the server
+     */
+    restart : function(callback ){
+      var path = "_restart";
+      self.post(path, function(response){
+        response = JSON.parse(response);
+        if(callback) callback(response);
+        else console.log(response);
+      });
+    },
     /* uuid
      * @params - integer, callback
-     * @returns - Sends parsed JSON to callback
+     * @returns - sends parsed JSON to callback
      * @description - gets specified amount of uuids from the server
      */
     uuid : function(count, callback) {
