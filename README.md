@@ -26,7 +26,7 @@ The aim of this project is to create a base api that reflects the couchdb native
     ```javascript
     /* Options Example */
     var options = {
-        	"host": "www.example.com",
+            "host": "www.example.com",
     		"port": "80",
     		"method": "POST",
     		"path": "/index?action=1223&php=off",
@@ -129,6 +129,27 @@ Documents reflect the methods available in the documents segment of the native c
 ```javascript
 /*Pass in a database name, a document object and a callback*/
 couchlib.documents.create("exampledb", {/*Couch Document Goes Here*/}, callback(res));
+```
+
+###couchlib.documents.get(database, document_id, callback(response))
+* To get a document from the database:
+```javascript
+/*Pass in a database name, a document id and a callback*/
+couchlib.documents.get("exampledb", "document id", callback(res));
+```
+
+###couchlib.documents.remove(database, document_id, callback(response))
+* To remove a document leaving only the history of _id and _rev:
+```javascript
+/*Pass in a database name, a document id and a callback*/
+couchlib.documents.remove("exampledb", "document id", callback(res));
+```
+
+###couchlib.documents.destroy(database, document_id, callback(response))
+* To remove a document from the database the safe way maintaining history:
+```javascript
+/*Pass in a database name, a document id and a callback*/
+couchlib.documents.destroy("exampledb", "document id", callback(res));
 ```
 
 ##Documents - Many 
