@@ -16,17 +16,7 @@ module.exports = function couchlib(options) {
 	/*@TODO Unit testing for library */
 	/*@TODO Maybe implement promises, and a more intuitive way of dealing with library */
   var self = this;
-  /* Initialise couchlib */
-	options = options || {};
-	if(options.host) this.host = options.host;
-	else this.host = "127.0.0.1"; // Default host to localhost
-
-	if(options.port) this.port = options.port;
-	else this.port = "5984"; // Default to port 5984
-
-	if(options.user) this.user = options.user;
-	if(options.password) this.password = options.password;
-
+  /* Couchlib is initialised at the end */
 
   /* run
    * @params - object, function
@@ -104,6 +94,8 @@ module.exports = function couchlib(options) {
 
       /* As soon as we get the end signal, pass our result to the callback or console log it */
       res.on(END, function returnResult() {
+        /* If show headers option is true, return the headers with the result */
+        if(options._SHOWHEADERS) result = {"result": result, "headers": res.headers};
         if(callback) callback(result);
         else console.log(result);
       }); // End returnResult
@@ -173,17 +165,27 @@ module.exports = function couchlib(options) {
    */
   this.post = function(path, /*[data]*/ callback) {
     var data = {};
+    var options = {"path": path, "method": "POST"};
     if(arguments.length == 3) {
       data = arguments[1];
       callback = arguments[2];
     }
-    this.run({"path": path, "data": data, "method": "POST"}, callback);
+    options.data = data;
+    if(data.headers) {
+      options.headers = data.headers;
+      delete options.data["headers"]
+    }
+    if(data._SHOWHEADERS) {
+      options._SHOWHEADERS = data._SHOWHEADERS;
+      delete options.data["_SHOWHEADERS"];
+    }
+    this.run(options, callback);
   };
 
   /* del
    * @params - string, [object], callback
    * @returns - sends parsed JSON to callback
-   * @description - Run a delete request, take optional data object as 2nd parameter
+   * @description - run a delete request, take optional data object as 2nd parameter
    *                run a callback to handle request response data. Uses run function.
    */
   this.del = function(path, /*data*/ callback) {
@@ -237,7 +239,6 @@ module.exports = function couchlib(options) {
       self.server.uuid(1, function(result){
         var uuid;
         var path;
-
         if(result.uuids) {
           /* Override uuid with schema id if we provided one */
           uuid = schema._id || result.uuids[0];
@@ -251,6 +252,36 @@ module.exports = function couchlib(options) {
         else{
           if(callback) callback(result);
           else console.log(result);
+        }
+      });
+    },
+    /* update
+     * @params - string, string, object, callback
+     * @returns - sends parsed JSON to callback
+     * @description - Updates a document with some changes,
+     *                first gets the json, parses it, then
+     *                appends the update to it and reapplies it.
+     */
+    update : function(database, docid, changes, callback) {
+      var rev;
+      self.documents.get(database, docid, function(response){
+        if(response.error == "not-found") {
+          if(callback) callback(response);
+          else console.log(response);
+        }
+        else if(response._rev) {
+          changes._rev = response._rev;
+          changes._id = docid;
+          for(var i in changes) {
+            if(changes.hasOwnProperty(i)) makeChange(i);
+          }
+          self.documents.create(database, changes, function(response){
+            if(callback) callback(response);
+            else console.log(response);
+          });
+        }
+        function makeChange(i) {
+          response[i] = changes[i];
         }
       });
     },
@@ -664,5 +695,44 @@ module.exports = function couchlib(options) {
       });
     }
   };
+
+  /* session
+   * @description - session management functions
+   */
+  this.session = {
+    /* get
+     * @description - cookie management functions
+     */
+    get : function(name, password, callback) {
+      var headers;
+      var header;
+      var headerobj = {};
+      self.post("_session", {"name": name, "password": password, "_SHOWHEADERS": true}, function(response){
+        if(response.headers) headers = response.headers;
+        response = JSON.parse(response.result);
+        headers = headers["set-cookie"][0].split(";");
+        for(var i = 0; i < headers.length; i++) {
+          header = headers[i].split("=");
+          headerobj[header[0].replace(" ", "")] = header[1];
+        }
+        if(callback) callback(headerobj.AuthSession);
+        else console.log(headerobj.AuthSession);
+      });
+    }
+  };
+
+  /* Initialise couchlib */
+  options = options || {};
+  if(options.host) this.host = options.host;
+  else this.host = "127.0.0.1"; // Default host to localhost
+
+  if(options.port) this.port = options.port;
+  else this.port = "5984"; // Default to port 5984
+
+  if(options.user) this.user = options.user;
+  if(options.password) this.password = options.password;
+  if(options.cookies) self.session.get(this.user, this.password, function(cookie){
+    if(cookie) self.cookie = cookie;
+  });
 };
 
