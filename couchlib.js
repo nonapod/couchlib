@@ -85,7 +85,7 @@ module.exports = function couchlib(options) {
       else {
         /* If we do have headers, but accept isn't in them, default it to JSON */
         if(!("Accept" in options.headers)) {
-          options.headers["Accept"] = "application/json";
+          options.headers.Accept = "application/json";
         }
         /* If we do have headers, but content-type isn't in them, default it to JSON */
         if(!("Content-Type" in options.headers)) {
@@ -250,7 +250,7 @@ module.exports = function couchlib(options) {
         }
         else{
           if(callback) callback(result);
-          else console.log(result)
+          else console.log(result);
         }
       });
     },
@@ -363,13 +363,14 @@ module.exports = function couchlib(options) {
         self.documents.many.get(dbname, ids, function(response){
           if(response.rows) {
             for(var i = 0, rows = response.rows.length; i < rows; i++) {
-              (function toRemove(i){
-                if(response.rows[i].id && response.rows[i].value.rev) {
-                  docs.push({"_id": response.rows[i].id, "_rev": response.rows[i].value.rev, "_deleted": true});
-                }
-                if(i == response.rows.length - 1) emitter.emit(FINISHED, docs);
-              })(i);
+              toRemove(i);
             }
+          }
+          function toRemove(i){
+            if(response.rows[i].id && response.rows[i].value.rev) {
+              docs.push({"_id": response.rows[i].id, "_rev": response.rows[i].value.rev, "_deleted": true});
+            }
+            if(i == response.rows.length - 1) emitter.emit(FINISHED, docs);
           }
         });
       },
@@ -496,7 +497,7 @@ module.exports = function couchlib(options) {
       if(arguments.length == 2) {
         throw new Error("stats need two string; a database, and a query, and a callback. Or just a callback.");
       }
-      else if(arguments.length = 3) {
+      else if(arguments.length == 3) {
         database = arguments[0];
         query = arguments[1];
         path = path + "/" + database + "/" + query;
@@ -586,7 +587,7 @@ module.exports = function couchlib(options) {
         }
         else {
           if(callback) callback(response);
-          else console.log(response)
+          else console.log(response);
         }
       });
     },
