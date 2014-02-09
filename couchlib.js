@@ -263,7 +263,6 @@ module.exports = function couchlib(options) {
      *                appends the update to it and reapplies it.
      */
     update : function(database, docid, changes, callback) {
-      var rev;
       self.documents.get(database, docid, function(response){
         if(response.error == "not-found") {
           if(callback) callback(response);
@@ -709,7 +708,6 @@ module.exports = function couchlib(options) {
       var headerobj = {};
       self.post("_session", {"name": name, "password": password, "_SHOWHEADERS": true}, function(response){
         if(response.headers) headers = response.headers;
-        response = JSON.parse(response.result);
         headers = headers["set-cookie"][0].split(";");
         for(var i = 0; i < headers.length; i++) {
           header = headers[i].split("=");
