@@ -154,7 +154,7 @@ couchlib.documents.create("exampledb", {/*Couch Document Goes Here*/}, callback(
 couchlib.documents.get("exampledb", "document id", callback(res));
 ```
 
-###couchlib.documents.udate(database, document_id, document, callback(response))
+###couchlib.documents.update(database, document_id, document, callback(response))
 * To update a document from the database:
 ```javascript
 /*Pass in a database name, a document id, an object with changes and a callback*/
@@ -162,7 +162,7 @@ couchlib.documents.get("exampledb", "document id", callback(res));
 /*For instance if the document in the database is {"name":"Mr.Smith", "age":32}*/
 /*and your changes document is {"name":"Mr.Jones"}*/
 /*The results of the update will be {"name":"Mr.Jones", "age":32}*/
-couchlib.documents.get("exampledb", "document id", {/*Changes Doc*/}, callback(res));
+couchlib.documents.update("exampledb", "document id", {/*Changes Doc*/}, callback(res));
 ```
 
 ###couchlib.documents.remove(database, document_id, callback(response))
